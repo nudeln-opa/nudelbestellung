@@ -78,17 +78,25 @@ Endpreis: {total_price:.2f} €
 
 Anbei die Bestellübersicht.
 """
+
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = "opasnudelbusiness@gmail.com"
+    msg["From"] = "opasnudelbusiness@gmail.com"   # HIER: muss mit App-Passwort übereinstimmen
     msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
     msg.set_content(body)
     msg.add_attachment(output.read(), maintype="application",
                        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                        filename="Bestellung.xlsx")
 
-    gmail_user = "opasnudelbusiness@gmail.com"
+    gmail_user = "opasnudelbusiness@gmail.com"  # HIER: muss exakt der Account sein
     gmail_password = os.environ.get("GMAIL_PASSWORD")
+
+    # ✅ Debug-Ausgaben
+    print("=== DEBUG START ===")
+    print("Gmail User:", gmail_user)
+    print("Passwort Länge:", len(gmail_password) if gmail_password else "NICHT GESETZT")
+    print("=== DEBUG END ===")
+
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(gmail_user, gmail_password)
@@ -98,3 +106,4 @@ Anbei die Bestellübersicht.
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
