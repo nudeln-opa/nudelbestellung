@@ -1,9 +1,12 @@
+import os
 from flask import Flask, render_template, request
-import smtplib, ssl, os, io
+import smtplib, ssl, io
 from email.message import EmailMessage
 import openpyxl
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
 
 noodles = [
     "Hartweizennudeln 6mm 30% Vollkorn 500g",
@@ -31,39 +34,32 @@ noodles = [
 
 @app.route("/")
 def index():
-    return render_template("index.html", noodles=noodles)
+    paypal_info = "PayPal: opasnudelbusiness@gmail.com"
+    return render_template("index.html", noodles=noodles, paypal=paypal_info)
 
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form["name"]
     department = request.form["department"]
     email_recipient = request.form["email"]
-
-    qtys = []
-    for i in range(1, len(noodles) + 1):
-        qtys.append(int(request.form.get(f"qty_{i}", 0)))
-
+    qtys = [int(request.form.get(f"qty_{i}", 0)) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
-
     free_packs = 0
     if total_qty > 50: free_packs = 5
     elif total_qty > 40: free_packs = 4
     elif total_qty > 30: free_packs = 3
     elif total_qty > 20: free_packs = 2
     elif total_qty > 10: free_packs = 1
-
     price_per_pack = 2.5
     total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Bestellung"
-
     ws.append(["Nudelsorte", "Preis (€)", "Menge", "Summe (€)"])
     for noodle, qty in zip(noodles, qtys):
         if qty > 0:
             ws.append([noodle, price_per_pack, qty, qty * price_per_pack])
-
     ws.append([])
     ws.append(["Gesamtanzahl", total_qty])
     ws.append(["Gratis-Packungen", free_packs])
@@ -82,7 +78,6 @@ Endpreis: {total_price:.2f} €
 
 Anbei die Bestellübersicht.
 """
-
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "opasnudelbusiness@gmail.com"
@@ -94,13 +89,12 @@ Anbei die Bestellübersicht.
 
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
-
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(gmail_user, gmail_password)
         server.send_message(msg)
 
-    return f"Bestellung erfolgreich gesendet an {email_recipient} und Opa Nudelbusiness!"
+    return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa Nudelbusiness!"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
