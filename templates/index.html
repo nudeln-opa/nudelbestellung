@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Nudelbestellung</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script>
+    function updateTotals() {
+      const pricePerPack = 2.5;
+      let totalPacks = 0;
+
+      document.querySelectorAll('.qty').forEach(input => {
+        totalPacks += parseInt(input.value || 0);
+      });
+
+      let freePacks = 0;
+      if (totalPacks > 50) freePacks = 5;
+      else if (totalPacks > 40) freePacks = 4;
+      else if (totalPacks > 30) freePacks = 3;
+      else if (totalPacks > 20) freePacks = 2;
+      else if (totalPacks > 10) freePacks = 1;
+
+      const totalPrice = totalPacks * pricePerPack - freePacks * pricePerPack;
+
+      document.getElementById("totalPacks").innerText = totalPacks;
+      document.getElementById("freePacks").innerText = freePacks;
+      document.getElementById("totalPrice").innerText = totalPrice.toFixed(2).replace('.', ',');
+    }
+  </script>
+</head>
+<body class="bg-light">
+<div class="container my-4">
+  <h2 class="mb-3">Nudelbestellung</h2>
+
+  <form action="/submit" method="post">
+    <div class="row mb-3">
+      <div class="col">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" name="name" required>
+      </div>
+      <div class="col">
+        <label for="department" class="form-label">Abteilung</label>
+        <input type="text" class="form-control" name="department" required>
+      </div>
+      <div class="col">
+        <label for="email" class="form-label">E-Mail</label>
+        <input type="email" class="form-control" name="email" required>
+      </div>
+    </div>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Nudelsorte</th>
+          <th>Preis</th>
+          <th>Stückzahl</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for noodle in noodles %}
+        <tr>
+          <td>{{ noodle }}</td>
+          <td>2,50 €</td>
+          <td><input type="number" class="form-control qty" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateTotals()"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="alert alert-info">
+      Gesamtanzahl: <strong id="totalPacks">0</strong> Packungen |
+      Gratis-Packungen: <strong id="freePacks">0</strong> |
+      Preis: <strong id="totalPrice">0,00</strong> €
+    </div>
+
+    <button type="submit" class="btn btn-primary">Bestellung absenden</button>
+  </form>
+
+  <div class="alert alert-warning mt-3">
+    <strong>Bezahlung per PayPal:</strong> {{ paypal }}
+  </div>
+</div>
+</body>
+</html>
