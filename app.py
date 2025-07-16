@@ -81,24 +81,27 @@ Anbei die Bestellübersicht.
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = "opasnudelbusiness@gmail.com"   # HIER: muss mit App-Passwort übereinstimmen
+    msg["From"] = "opasnudelbusiness@gmail.com"
     msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
     msg.set_content(body)
     msg.add_attachment(output.read(), maintype="application",
                        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                        filename="Bestellung.xlsx")
 
-    gmail_user = "opasnudelbusiness@gmail.com"  # HIER: muss exakt der Account sein
+    gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
-    # ✅ Debug-Ausgaben
+    # ✅ Debug-Ausgabe
     print("=== DEBUG START ===")
     print("Gmail User:", gmail_user)
     print("Passwort Länge:", len(gmail_password) if gmail_password else "NICHT GESETZT")
     print("=== DEBUG END ===")
 
     context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.ehlo()
+        server.starttls(context=context)
+        server.ehlo()
         server.login(gmail_user, gmail_password)
         server.send_message(msg)
 
