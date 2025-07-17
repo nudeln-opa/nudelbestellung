@@ -2,49 +2,161 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Nudelbestellung</title>
-  <script>
-    const pricePerPack = {{ price_per_pack }};
-    function updateTotal() {
-      let totalQty = 0;
-      document.querySelectorAll(".qty").forEach(input => {
-        totalQty += parseInt(input.value || 0);
-      });
-      const freePacks = Math.floor(totalQty / 10);
-      const totalPrice = totalQty * pricePerPack - freePacks * pricePerPack;
+  <title>🍝 Nudelbestellung</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #fafafa;
+      color: #333;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-      document.getElementById("totalQty").innerText = totalQty;
-      document.getElementById("freePacks").innerText = freePacks;
-      document.getElementById("totalPrice").innerText = totalPrice.toFixed(2);
+    h1 {
+      text-align: center;
+      color: #e67e22;
+      font-size: 2.2em;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f5f5f5;
+    }
+
+    .summary {
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .btn {
+      background: #e67e22;
+      color: white;
+      padding: 12px 20px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #cf711f;
+    }
+
+    .paypal-hint {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.95em;
+      color: #666;
+    }
+
+  </style>
+  <script>
+    function updateSummary() {
+      let pricePerPack = 2.5;
+      let totalQty = 0;
+      const qtyInputs = document.querySelectorAll('.qty');
+
+      qtyInputs.forEach(input => {
+        totalQty += parseInt(input.value) || 0;
+      });
+
+      // Gratis-Packungen berechnen
+      let freePacks = Math.floor(totalQty / 10);
+
+      // Gesamtpreis
+      let totalPrice = (totalQty - freePacks) * pricePerPack;
+
+      document.getElementById("totalQty").textContent = totalQty;
+      document.getElementById("freePacks").textContent = freePacks;
+      document.getElementById("totalPrice").textContent = totalPrice.toFixed(2);
     }
   </script>
 </head>
 <body>
-  <h1>Nudelbestellung</h1>
-  <form action="/submit" method="post">
-    <label>Name:</label>
-    <input type="text" name="name" required><br><br>
 
-    <label>Email:</label>
-    <input type="email" name="email" required><br><br>
+  <h1>🍝 Nudelbestellung</h1>
 
-    <table border="1">
-      <tr><th>Nudel</th><th>Preis (€)</th><th>Menge</th></tr>
-      {% for noodle in noodles %}
-      <tr>
-        <td>{{ noodle }}</td>
-        <td>{{ price_per_pack }}</td>
-        <td><input type="number" name="qty_{{ loop.index }}" value="0" class="qty" min="0" onchange="updateTotal()"></td>
-      </tr>
-      {% endfor %}
+  <form method="POST" action="/submit">
+    <div class="input-group">
+      <label for="name">Name:</label>
+      <input type="text" name="name" required>
+    </div>
+
+    <div class="input-group">
+      <label for="email">E-Mail:</label>
+      <input type="email" name="email" required>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nudel</th>
+          <th>Preis (€)</th>
+          <th>Menge</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for noodle in noodles %}
+        <tr>
+          <td style="text-align:left;">{{ noodle }}</td>
+          <td>2.50</td>
+          <td>
+            <input class="qty" type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()">
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
 
-    <p><strong>Gesamtanzahl:</strong> <span id="totalQty">0</span> Packungen</p>
-    <p><strong>Gratis-Packungen:</strong> <span id="freePacks">0</span></p>
-    <p><strong>Zu zahlen:</strong> <span id="totalPrice">0.00</span> €</p>
+    <div class="summary">
+      Gesamtanzahl: <span id="totalQty">0</span> Packungen<br>
+      Gratis-Packungen: <span id="freePacks">0</span><br>
+      Zu zahlen: <span id="totalPrice">0.00</span> €
+    </div>
 
-    <button type="submit">Bestellen</button>
+    <button class="btn" type="submit">✅ Bestellung abschicken</button>
+
+    <div class="paypal-hint">
+      Bezahlung per PayPal an: <strong>opasnudelbusiness@gmail.com</strong>
+    </div>
   </form>
-  <p>Bezahlung per PayPal an: <strong>{{ paypal }}</strong></p>
+
 </body>
 </html>
