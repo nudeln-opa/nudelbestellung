@@ -32,64 +32,54 @@ noodles = [
     "Dinkelsuppennudeln 500g"
 ]
 
+PRICE_PER_PACK = 2.5
+PAYPAL_INFO = "PayPal: opasnudelbusiness@gmail.com"
+
 @app.route("/")
 def index():
-    paypal_info = "PayPal: opasnudelbusiness@gmail.com"
-    return render_template("index.html", noodles=noodles, paypal=paypal_info)
+    return render_template("index.html", noodles=noodles, price_per_pack=PRICE_PER_PACK, paypal=PAYPAL_INFO)
 
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form["name"]
     email_recipient = request.form["email"]
 
-    # Mengen sammeln
+    # Mengen aus Formular lesen
     qtys = [int(request.form.get(f"qty_{i}", 0)) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
-
-    # Gratis-Packungen: 1 pro 10 Stück
-    free_packs = total_qty // 10
-    price_per_pack = 2.5
-    total_price = (total_qty - free_packs) * price_per_pack
+    free_packs = total_qty // 10  # Jede 10. gratis
+    total_price = total_qty * PRICE_PER_PACK - free_packs * PRICE_PER_PACK
 
     # Excel erstellen
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Bestellung"
-
-    # Spalte A breiter machen
     ws.column_dimensions['A'].width = 40
-
     ws.append(["Nudelsorte", "Preis (€)", "Menge", "Summe (€)"])
     for noodle, qty in zip(noodles, qtys):
         if qty > 0:
-            ws.append([noodle, price_per_pack, qty, qty * price_per_pack])
+            ws.append([noodle, PRICE_PER_PACK, qty, qty * PRICE_PER_PACK])
     ws.append([])
     ws.append(["Gesamtanzahl", total_qty])
     ws.append(["Gratis-Packungen", free_packs])
     ws.append(["Endpreis (€)", total_price])
 
-    # Excel in Speicher schreiben
+    # Excel in Memory speichern
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
 
-    paypal_info = "opasnudelbusiness@gmail.com"
-
-    # E-Mail Inhalt
+    # Email-Inhalt
     subject = f"Nudelbestellung von {name}"
-    body = f"""Hallo {name},
-
-Danke für deine Bestellung!
-
-Gesamtanzahl: {total_qty} Packungen
-Gratis-Packungen: {free_packs}
-Endpreis: {total_price:.2f} €
-
-Bitte bezahle den Betrag per PayPal an:
-➡ {paypal_info}
-
-Anbei findest du die Bestellübersicht als Excel.
-"""
+    body = (
+        f"Hallo {name},\n\n"
+        f"danke für deine Bestellung!\n\n"
+        f"Gesamtanzahl: {total_qty} Packungen\n"
+        f"Gratis-Packungen: {free_packs}\n"
+        f"Endpreis: {total_price:.2f} €\n\n"
+        f"Bitte bezahle per PayPal an: {PAYPAL_INFO}\n\n"
+        f"Die Bestellübersicht ist im Anhang als Excel-Datei.\n"
+    )
 
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -103,17 +93,14 @@ Anbei findest du die Bestellübersicht als Excel.
         filename="Bestellung.xlsx"
     )
 
-    # Login-Daten
+    # SMTP Login
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
-    # Debug-Ausgabe
-    print("=== DEBUG START ===")
+    print("=== DEBUG ===")
     print("Gmail User:", gmail_user)
-    print("Passwort Länge:", len(gmail_password) if gmail_password else "NICHT GESETZT")
-    print("=== DEBUG END ===")
+    print("Passwort gesetzt:", bool(gmail_password))
 
-    # Mail senden
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(gmail_user, gmail_password)
