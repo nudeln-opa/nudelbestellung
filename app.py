@@ -1,112 +1,54 @@
-import os
 from flask import Flask, render_template, request
-import smtplib, ssl, io
+import smtplib
+import ssl
 from email.message import EmailMessage
-import openpyxl
+import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
-app = Flask(__name__, template_folder=TEMPLATE_DIR)
+app = Flask(__name__)
 
-noodles = [
-    "Hartweizennudeln 6mm 30% Vollkorn 500g",
-    "Casarecce 500g",
-    "Wellenspätzle 500g",
-    "Bandnudeln 9,5 mm 500g",
-    "Bandnudeln 6 mm 500g",
-    "Wellenbandnudeln 500g",
-    "Campanelle 500g",
-    "Spiralnudeln 500g",
-    "Spaghetti 500g",
-    "Suppennudeln 500g",
-    "Dinkelnudeln 6mm 30% Vollkorn 500g",
-    "Dinkelcasarecce 500g",
-    "Dinkelspätzle 500g",
-    "Dinkelwellenspätzle 500g",
-    "Dinkelbandnudeln 9,5 mm 500g",
-    "Dinkelbandnudeln 6 mm 500g",
-    "Dinkelwellenbandnudeln 500g",
-    "Dinkelcampanelle 500g",
-    "Dinkelspiralnudeln 500g",
-    "Dinkelspaghetti 500g",
-    "Dinkelsuppennudeln 500g"
-]
-
-@app.route("/")
+@app.route('/')
 def index():
-    paypal_info = "PayPal: opasnudelbusiness@gmail.com"
-    return render_template("index.html", noodles=noodles, paypal=paypal_info)
+    return render_template('index.html')
 
-@app.route("/submit", methods=["POST"])
+@app.route('/submit', methods=['POST'])
 def submit():
-    name = request.form["name"]
-    department = request.form["department"]
-    email_recipient = request.form["email"]
-    qtys = [int(request.form.get(f"qty_{i}", 0)) for i in range(1, len(noodles)+1)]
-    total_qty = sum(qtys)
-    free_packs = 0
-    if total_qty > 50: free_packs = 5
-    elif total_qty > 40: free_packs = 4
-    elif total_qty > 30: free_packs = 3
-    elif total_qty > 20: free_packs = 2
-    elif total_qty > 10: free_packs = 1
-    price_per_pack = 2.5
-    total_price = total_qty * price_per_pack - free_packs * price_per_pack
+    name = request.form['name']
+    department = request.form['department']
+    order_details = request.form['order_details']
+    user_email = request.form['email']
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Bestellung"
-    ws.append(["Nudelsorte", "Preis (€)", "Menge", "Summe (€)"])
-    for noodle, qty in zip(noodles, qtys):
-        if qty > 0:
-            ws.append([noodle, price_per_pack, qty, qty * price_per_pack])
-    ws.append([])
-    ws.append(["Gesamtanzahl", total_qty])
-    ws.append(["Gratis-Packungen", free_packs])
-    ws.append(["Endpreis (€)", total_price])
-
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    subject = f"Nudelbestellung von {name} ({department})"
-    body = f"""Danke für deine Bestellung, {name} aus {department}.
-
-Gesamtanzahl: {total_qty} Packungen
-Gratis-Packungen: {free_packs}
-Endpreis: {total_price:.2f} €
-
-Anbei die Bestellübersicht.
-"""
-
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = "opasnudelbusiness@gmail.com"
-    msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
-    msg.set_content(body)
-    msg.add_attachment(output.read(), maintype="application",
-                       subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                       filename="Bestellung.xlsx")
-
+    # Gmail Konfiguration
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
-    # ✅ Debug-Ausgabe
+    # Debug-Ausgabe in Render Logs
     print("=== DEBUG START ===")
     print("Gmail User:", gmail_user)
-    print("Passwort Länge:", len(gmail_password) if gmail_password else "NICHT GESETZT")
+    if gmail_password:
+        print("Passwort Länge:", len(gmail_password))
+        print("Passwort (erste 4 Zeichen):", gmail_password[:4], "...")
+    else:
+        print("!!! ACHTUNG: Kein Passwort gefunden !!!")
     print("=== DEBUG END ===")
 
-    context = ssl.create_default_context()
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.ehlo()
-        server.starttls(context=context)
-        server.ehlo()
-        server.login(gmail_user, gmail_password)
-        server.send_message(msg)
+    # E-Mail vorbereiten
+    msg = EmailMessage()
+    msg['Subject'] = f"Nudelbestellung von {name}"
+    msg['From'] = gmail_user
+    msg['To'] = [gmail_user, user_email]  # Besteller bekommt Kopie
+    msg.set_content(f"Bestellung von {name} ({department}):\n\n{order_details}")
 
-    return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa Nudelbusiness!"
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls(context=context)
+            server.login(gmail_user, gmail_password)  # <- hier kommt der Fehler
+            server.send_message(msg)
+        return "Bestellung erfolgreich gesendet!"
+    except smtplib.SMTPAuthenticationError as e:
+        return f"Authentifizierungsfehler: {e}"
+    except Exception as e:
+        return f"Fehler beim Senden: {e}"
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
