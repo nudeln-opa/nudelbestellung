@@ -40,22 +40,25 @@ def index():
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form["name"]
-    department = request.form["department"]
     email_recipient = request.form["email"]
+
+    # Mengen sammeln
     qtys = [int(request.form.get(f"qty_{i}", 0)) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
-    free_packs = 0
-    if total_qty > 50: free_packs = 5
-    elif total_qty > 40: free_packs = 4
-    elif total_qty > 30: free_packs = 3
-    elif total_qty > 20: free_packs = 2
-    elif total_qty > 10: free_packs = 1
-    price_per_pack = 2.5
-    total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
+    # Gratis-Packungen: 1 pro 10 Stück
+    free_packs = total_qty // 10
+    price_per_pack = 2.5
+    total_price = (total_qty - free_packs) * price_per_pack
+
+    # Excel erstellen
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Bestellung"
+
+    # Spalte A breiter machen
+    ws.column_dimensions['A'].width = 40
+
     ws.append(["Nudelsorte", "Preis (€)", "Menge", "Summe (€)"])
     for noodle, qty in zip(noodles, qtys):
         if qty > 0:
@@ -65,38 +68,52 @@ def submit():
     ws.append(["Gratis-Packungen", free_packs])
     ws.append(["Endpreis (€)", total_price])
 
+    # Excel in Speicher schreiben
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
 
-    subject = f"Nudelbestellung von {name} ({department})"
-    body = f"""Danke für deine Bestellung, {name} aus {department}.
+    paypal_info = "opasnudelbusiness@gmail.com"
+
+    # E-Mail Inhalt
+    subject = f"Nudelbestellung von {name}"
+    body = f"""Hallo {name},
+
+Danke für deine Bestellung!
 
 Gesamtanzahl: {total_qty} Packungen
 Gratis-Packungen: {free_packs}
 Endpreis: {total_price:.2f} €
 
-Anbei die Bestellübersicht.
+Bitte bezahle den Betrag per PayPal an:
+➡ {paypal_info}
+
+Anbei findest du die Bestellübersicht als Excel.
 """
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = "opasnudelbusiness@gmail.com"   # HIER: muss mit App-Passwort übereinstimmen
+    msg["From"] = "opasnudelbusiness@gmail.com"
     msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
     msg.set_content(body)
-    msg.add_attachment(output.read(), maintype="application",
-                       subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                       filename="Bestellung.xlsx")
+    msg.add_attachment(
+        output.read(),
+        maintype="application",
+        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="Bestellung.xlsx"
+    )
 
-    gmail_user = "opasnudelbusiness@gmail.com"  # HIER: muss exakt der Account sein
+    # Login-Daten
+    gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
-    # ✅ Debug-Ausgaben
+    # Debug-Ausgabe
     print("=== DEBUG START ===")
     print("Gmail User:", gmail_user)
     print("Passwort Länge:", len(gmail_password) if gmail_password else "NICHT GESETZT")
     print("=== DEBUG END ===")
 
+    # Mail senden
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(gmail_user, gmail_password)
