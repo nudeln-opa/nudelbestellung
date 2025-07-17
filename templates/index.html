@@ -1,75 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Nudelbestellung</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 8px; border-bottom: 1px solid #ddd; }
-    input[type="number"] { width: 60px; }
-    .summary { margin-top: 15px; font-size: 1.2em; }
-    .paypal-info { margin-top: 15px; font-weight: bold; color: darkblue; }
-  </style>
-</head>
-<body>
-  <h2>Nudelbestellung</h2>
-
-  <form method="POST" action="/submit">
-    <label for="name">Name:</label><br>
-    <input type="text" name="name" required><br><br>
-
-    <label for="email">E-Mail:</label><br>
-    <input type="email" name="email" required><br><br>
-
-    <h3>Wähle deine Nudeln:</h3>
-    <table>
-      <tr><th>Nudelart</th><th>Menge</th></tr>
-      {% for i, noodle in enumerate(noodles, start=1) %}
-      <tr>
-        <td>{{ noodle }}</td>
-        <td>
-          <input type="number" name="qty_{{ i }}" value="0" min="0" class="qty">
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-
-    <div class="summary">
-      <p><b>Gesamtpreis: <span id="total_price">0.00</span> €</b></p>
-      <p><b>Gratis-Packungen: <span id="free_packs">0</span></b></p>
-    </div>
-
-    <div class="paypal-info">
-      Bezahlung per PayPal an: {{ paypal }}
-    </div>
-
-    <br>
-    <button type="submit">✅ Bestellung absenden</button>
-  </form>
-
   <script>
-    const pricePerPack = 2.5;
-
-    function updateSummary() {
+    const pricePerPack = {{ price_per_pack }};
+    function updateTotal() {
       let totalQty = 0;
       document.querySelectorAll(".qty").forEach(input => {
         totalQty += parseInt(input.value || 0);
       });
+      const freePacks = Math.floor(totalQty / 10);
+      const totalPrice = totalQty * pricePerPack - freePacks * pricePerPack;
 
-      // Gratis-Packungen: 1 pro 10
-      let freePacks = Math.floor(totalQty / 10);
-
-      // Endpreis
-      let totalPrice = (totalQty - freePacks) * pricePerPack;
-
-      document.getElementById("total_price").innerText = totalPrice.toFixed(2);
-      document.getElementById("free_packs").innerText = freePacks;
+      document.getElementById("totalQty").innerText = totalQty;
+      document.getElementById("freePacks").innerText = freePacks;
+      document.getElementById("totalPrice").innerText = totalPrice.toFixed(2);
     }
-
-    document.querySelectorAll(".qty").forEach(input => {
-      input.addEventListener("input", updateSummary);
-    });
   </script>
+</head>
+<body>
+  <h1>Nudelbestellung</h1>
+  <form action="/submit" method="post">
+    <label>Name:</label>
+    <input type="text" name="name" required><br><br>
+
+    <label>Email:</label>
+    <input type="email" name="email" required><br><br>
+
+    <table border="1">
+      <tr><th>Nudel</th><th>Preis (€)</th><th>Menge</th></tr>
+      {% for noodle in noodles %}
+      <tr>
+        <td>{{ noodle }}</td>
+        <td>{{ price_per_pack }}</td>
+        <td><input type="number" name="qty_{{ loop.index }}" value="0" class="qty" min="0" onchange="updateTotal()"></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <p><strong>Gesamtanzahl:</strong> <span id="totalQty">0</span> Packungen</p>
+    <p><strong>Gratis-Packungen:</strong> <span id="freePacks">0</span></p>
+    <p><strong>Zu zahlen:</strong> <span id="totalPrice">0.00</span> €</p>
+
+    <button type="submit">Bestellen</button>
+  </form>
+  <p>Bezahlung per PayPal an: <strong>{{ paypal }}</strong></p>
 </body>
 </html>
