@@ -1,92 +1,65 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f8f8f8;
-  text-align: center;
-  margin: 0;
-  padding: 20px;
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f8f8f8;
+    color: #333;
 }
 
 h1 {
-  color: #d35400;
-  margin-bottom: 5px;
+    font-size: 2rem;
 }
 
-h3 {
-  color: #666;
-  font-weight: normal;
-  margin-top: 0;
-  margin-bottom: 20px;
+h2 {
+    margin-top: 40px;
 }
 
-form {
-  background: white;
-  padding: 20px;
-  margin: auto;
-  width: 95%;
-  max-width: 1100px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  border-radius: 8px;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-label {
-  display: inline-block;
-  margin: 10px;
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
-input, select {
-  margin: 10px;
-  padding: 5px;
+th {
+    font-weight: bold;
+    color: white;
 }
 
-.order-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  table-layout: fixed;
+img {
+    width: 100px;
+    height: auto;
+    border-radius: 5px;
 }
 
-.order-table thead {
-  color: white;
+.hartweizen-header {
+    background: #d9534f; /* Rot für Hartweizen */
 }
 
-.order-table th, .order-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-  vertical-align: middle;
-  word-wrap: break-word;
+.dinkel-header {
+    background: #5cb85c; /* Grün für Dinkel */
 }
 
-.order-table img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 5px;
-  display: block;
-  margin: 0 auto;
-}
-
-/* ✅ Hartweizen-Bereich */
-.hartweizen-section thead {
-  background: #ff6b6b; /* leicht rot */
-}
-
-/* ✅ Dinkel-Bereich */
-.dinkel-section thead {
-  background: #4CAF50; /* grün */
+.summary {
+    font-size: 1.1rem;
+    margin-top: 20px;
 }
 
 button {
-  background: #d35400;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  margin-top: 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 button:hover {
-  background: #e67e22;
+    background: #0056b3;
 }
