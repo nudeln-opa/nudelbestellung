@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>🍝 Nudelbestellung</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
     <h1>🍝 Nudelbestellung</h1>
     <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
 
-    <form action="/submit" method="POST">
+    <form method="post" action="/submit">
         <label for="name">Name:</label>
         <input type="text" name="name" required>
-
+        
         <label for="email">Email:</label>
         <input type="email" name="email" required>
 
         <label for="payment">Zahlungsart:</label>
-        <select name="payment" required>
+        <select name="payment">
             <option value="Bar">Bar</option>
             <option value="PayPal">PayPal</option>
         </select>
 
-        <!-- ✅ Hartweizen-Nudeln -->
-        <table class="order-table hartweizen-section">
-            <thead>
-                <tr>
-                    <th colspan="4">🍝 Hartweizen-Nudeln</th>
-                </tr>
+        <!-- ✅ Hartweizen-Tabelle -->
+        <h2 class="hartweizen-title">Hartweizen-Nudeln</h2>
+        <table>
+            <thead class="hartweizen-header">
                 <tr>
                     <th>Bild</th>
                     <th>Nudel (500g)</th>
@@ -37,25 +34,23 @@
                 </tr>
             </thead>
             <tbody>
-                {% for noodle in noodles if not noodle.lower().startswith('dinkel') %}
+                {% for i, noodle in enumerate(noodles) if not noodle.lower().startswith('dinkel') %}
                 <tr>
-                    <td><img src="{{ url_for('static', filename='images/' + noodle|replace(' ', '_') + '.JPG') }}" alt="{{ noodle }}"></td>
-                    <td>{{ noodle }}</td>
-                    <td>2.5</td>
                     <td>
-                        <input type="number" name="qty_{{ loop.index }}" min="0" value="0">
+                        <img src="{{ url_for('static', filename='images/' + noodle.replace(' ', '_') + '.JPG') }}" alt="{{ noodle }}">
                     </td>
+                    <td>{{ noodle }}</td>
+                    <td>2.50</td>
+                    <td><input type="number" name="qty_{{ i+1 }}" min="0" value="0"></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- ✅ Dinkel-Nudeln -->
-        <table class="order-table dinkel-section" style="margin-top: 30px;">
-            <thead>
-                <tr>
-                    <th colspan="4">🌿 Dinkel-Nudeln</th>
-                </tr>
+        <!-- ✅ Dinkel-Tabelle -->
+        <h2 class="dinkel-title">Dinkel-Nudeln</h2>
+        <table>
+            <thead class="dinkel-header">
                 <tr>
                     <th>Bild</th>
                     <th>Nudel (500g)</th>
@@ -64,48 +59,26 @@
                 </tr>
             </thead>
             <tbody>
-                {% for noodle in noodles if noodle.lower().startswith('dinkel') %}
+                {% for i, noodle in enumerate(noodles) if noodle.lower().startswith('dinkel') %}
                 <tr>
-                    <td><img src="{{ url_for('static', filename='images/' + noodle|replace(' ', '_') + '.JPG') }}" alt="{{ noodle }}"></td>
-                    <td>{{ noodle }}</td>
-                    <td>2.5</td>
                     <td>
-                        <input type="number" name="qty_{{ loop.index }}" min="0" value="0">
+                        <img src="{{ url_for('static', filename='images/' + noodle.replace(' ', '_') + '.JPG') }}" alt="{{ noodle }}">
                     </td>
+                    <td>{{ noodle }}</td>
+                    <td>2.50</td>
+                    <td><input type="number" name="qty_{{ i+1 }}" min="0" value="0"></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <h3 id="summary">Gesamtanzahl: 0 Packungen<br>Gratis-Packungen: 0<br>Zu zahlen: 0.00 €</h3>
+        <div class="summary">
+            <p><strong>Gesamtanzahl:</strong> <span id="totalQty">0</span> Packungen</p>
+            <p><strong>Gratis-Packungen:</strong> <span id="freePacks">0</span></p>
+            <p><strong>Zu zahlen:</strong> <span id="totalPrice">0.00 €</span></p>
+        </div>
 
         <button type="submit">Bestellen</button>
     </form>
-
-    <script>
-        // ✅ JS: Preisberechnung im Frontend
-        const pricePerPack = 2.5;
-        const qtyInputs = document.querySelectorAll('input[type="number"]');
-        const summary = document.getElementById("summary");
-
-        function updateSummary() {
-            let totalQty = 0;
-            qtyInputs.forEach(input => {
-                totalQty += parseInt(input.value) || 0;
-            });
-
-            let freePacks = Math.floor(totalQty / 10);
-            let totalPrice = (totalQty - freePacks) * pricePerPack;
-
-            summary.innerHTML = `Gesamtanzahl: ${totalQty} Packungen<br>
-                                 Gratis-Packungen: ${freePacks}<br>
-                                 Zu zahlen: ${totalPrice.toFixed(2)} €`;
-        }
-
-        qtyInputs.forEach(input => {
-            input.addEventListener("input", updateSummary);
-        });
-    </script>
-
 </body>
 </html>
