@@ -36,12 +36,20 @@ noodles = [
 
 @app.route("/")
 def index():
-    return render_template("index.html", noodles=noodles, price_per_pack=PRICE_PER_PACK, paypal=PAYPAL_MAIL)
+    return render_template(
+        "index.html",
+        noodles=noodles,
+        price_per_pack=PRICE_PER_PACK,
+        paypal=PAYPAL_MAIL
+    )
 
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form["name"]
     email_recipient = request.form["email"]
+    payment_method = request.form.get("payment", "Nicht angegeben")
+    
+    # Mengen auslesen
     qtys = [int(request.form.get(f"qty_{i}", 0)) for i in range(len(noodles))]
     total_qty = sum(qtys)
 
@@ -67,6 +75,7 @@ def submit():
     wb.save(output)
     output.seek(0)
 
+    # Email-Inhalt
     subject = f"Nudelbestellung von {name}"
     body = f"""Danke für deine Bestellung, {name}!
 
@@ -74,10 +83,14 @@ Gesamtanzahl: {total_qty} Packungen
 Gratis-Packungen: {free_packs}
 Endpreis: {total_price:.2f} €
 
-Bitte überweise den Betrag an: {PAYPAL_MAIL} (PayPal)
+Gewählte Zahlungsmethode: {payment_method}
+
+{"Bitte überweise den Betrag an: " + PAYPAL_MAIL if payment_method.lower() == "paypal" else "Die Bezahlung erfolgt bar bei Abholung / Lieferung."}
+
 Die Bestellübersicht findest du im Anhang.
 """
 
+    # Email erstellen
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = PAYPAL_MAIL
@@ -87,6 +100,7 @@ Die Bestellübersicht findest du im Anhang.
                        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                        filename="Bestellung.xlsx")
 
+    # SMTP Login
     gmail_user = PAYPAL_MAIL
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
