@@ -12,10 +12,15 @@
         h1 {
             color: #d35400;
         }
+        h2.slogan {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: -5px;
+        }
         table {
             margin: 20px auto;
             border-collapse: collapse;
-            width: 80%;
+            width: 85%;
         }
         th, td {
             border: 1px solid #ddd;
@@ -67,18 +72,21 @@
 </head>
 <body>
 
-<h1>🍝 Nudelbestellung (500 g)</h1>
+<h1>🍝 Nudelbestellung</h1>
+<h2 class="slogan">Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h2>
 
 <form method="POST" action="/submit">
-    <label>Name:</label>
-    <input type="text" name="name" required>
-    <label>Email:</label>
-    <input type="email" name="email" required>
+    <p>
+        <label><strong>Name:</strong></label>
+        <input type="text" name="name" required>
+        <label><strong>Email:</strong></label>
+        <input type="email" name="email" required>
+    </p>
 
     <table>
         <tr>
             <th>Bild</th>
-            <th>Nudelsorte</th>
+            <th>Nudel (500 g)</th>
             <th>Preis (€)</th>
             <th>Menge</th>
         </tr>
@@ -100,7 +108,15 @@
         Zu zahlen: <span id="totalPrice" class="price-highlight">0.00</span> €
     </div>
 
-    <p>Bezahlung an: <strong>{{ paypal }}</strong></p>
+    <h3>Zahlungsmethode</h3>
+    <label>
+        <input type="radio" name="payment" value="Bar" required> Barzahlung
+    </label>
+    <label>
+        <input type="radio" name="payment" value="PayPal" required> PayPal
+    </label>
+
+    <p>Bei Auswahl von PayPal: <strong>{{ paypal }}</strong></p>
 
     <button class="order-btn" type="submit">✅ Bestellung abschicken</button>
 </form>
