@@ -1,138 +1,126 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Nudelbestellung</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #fafafa;
-            color: #333;
-        }
-        h1 {
-            color: #d35400;
-            text-align: center;
-        }
-        h3 {
-            text-align: center;
-            color: #666;
-            font-weight: normal;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background: #f39c12;
-            color: white;
-        }
-        img {
-            width: 50px;
-            height: auto;
-            border-radius: 5px;
-        }
-        .summary {
-            margin-top: 20px;
-            font-size: 16px;
-        }
-        .summary b {
-            color: #e67e22;
-        }
-        .form-section {
-            margin-top: 20px;
-        }
-        input[type="text"], input[type="email"], select {
-            padding: 8px;
-            width: calc(100% - 20px);
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        input[type="number"] {
-            width: 60px;
-            text-align: center;
-        }
-        button {
-            background: #e67e22;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #d35400;
-        }
-    </style>
-</head>
-<body>
-    <h1>🍝 Nudelbestellung</h1>
-    <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
+import os
+from flask import Flask, render_template, request
+import smtplib, ssl, io
+from email.message import EmailMessage
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
-    <form id="orderForm" method="POST" action="/submit">
-        <div class="form-section">
-            <label>Name:</label>
-            <input type="text" name="name" required>
-            <label>Email:</label>
-            <input type="email" name="email" required>
-        </div>
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-        <table>
-            <tr>
-                <th>Nudel (500g)</th>
-                <th>Bild</th>
-                <th>Preis (€)</th>
-                <th>Menge</th>
-            </tr>
-            {% for noodle in noodles %}
-            <tr>
-                <td>{{ noodle }}</td>
-                <td><img src="{{ url_for('static', filename='images/' + noodle.replace(' ', '_') + '.JPG') }}" alt="{{ noodle }}"></td>
-                <td>2.5</td>
-                <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
-            </tr>
-            {% endfor %}
-        </table>
+# ✅ Nudelsorten-Liste (ohne Sonderzeichen in Bildnamen)
+noodles = [
+    "Hartweizennudeln 6mm 30% Vollkorn",
+    "Casarecce",
+    "Wellenspätzle",
+    "Bandnudeln 9,5mm",
+    "Bandnudeln 6mm",
+    "Wellenbandnudeln",
+    "Campanelle",
+    "Spiralnudeln",
+    "Spaghetti",
+    "Suppennudeln",
+    "Dinkelnudeln 6mm 30% Vollkorn",
+    "Dinkelcasarecce",
+    "Dinkelspätzle",
+    "Dinkelwellenspätzle",
+    "Dinkelbandnudeln 9,5mm",
+    "Dinkelbandnudeln 6mm",
+    "Dinkelwellenbandnudeln",
+    "Dinkelcampanelle",
+    "Dinkelspiralnudeln",
+    "Dinkelspaghetti",
+    "Dinkelsuppennudeln"
+]
 
-        <div class="summary">
-            <p><b>Gesamtanzahl:</b> <span id="totalQty">0</span> Packungen</p>
-            <p><b>Gratis-Packungen:</b> <span id="freePacks">0</span></p>
-            <p><b>Zu zahlen:</b> <span id="totalPrice">0.00</span> €</p>
-        </div>
+@app.route("/")
+def index():
+    return render_template("index.html", noodles=noodles)
 
-        <div class="form-section">
-            <label>Bezahlmethode:</label>
-            <select name="payment_method">
-                <option value="Bar">Bar</option>
-                <option value="PayPal">PayPal</option>
-            </select>
-        </div>
+@app.route("/submit", methods=["POST"])
+def submit():
+    name = request.form.get("name", "Unbekannt")
+    email_recipient = request.form.get("email")
+    payment_method = request.form.get("payment_method", "Bar")
 
-        <button type="submit">Bestellen</button>
-    </form>
+    qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles) + 1)]
+    total_qty = sum(qtys)
 
-    <script>
-        const pricePerPack = 2.5;
-        function updateSummary() {
-            let totalQty = 0;
-            document.querySelectorAll('input[type="number"]').forEach(input => {
-                totalQty += parseInt(input.value || 0);
-            });
-            let freePacks = Math.floor(totalQty / 10);
-            let totalPrice = totalQty * pricePerPack - freePacks * pricePerPack;
-            document.getElementById('totalQty').textContent = totalQty;
-            document.getElementById('freePacks').textContent = freePacks;
-            document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
-        }
-    </script>
-</body>
-</html>
+    # Gratis-Packungen (alle 10 -> 1 gratis)
+    free_packs = total_qty // 10
+
+    price_per_pack = 2.5
+    total_price = total_qty * price_per_pack - free_packs * price_per_pack
+
+    # ✅ PDF mit Bestellung erzeugen
+    pdf_buffer = io.BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=A4)
+    width, height = A4
+    y = height - 50
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, y, f"Nudelbestellung von {name}")
+    y -= 30
+
+    c.setFont("Helvetica", 12)
+    for noodle, qty in zip(noodles, qtys):
+        if qty > 0:
+            c.drawString(50, y, f"{noodle} - {qty} x {price_per_pack:.2f} € = {qty * price_per_pack:.2f} €")
+            y -= 20
+
+    y -= 20
+    c.drawString(50, y, f"Gesamtanzahl: {total_qty} Packungen")
+    y -= 20
+    c.drawString(50, y, f"Gratis-Packungen: {free_packs}")
+    y -= 20
+    c.drawString(50, y, f"Endpreis: {total_price:.2f} €")
+    y -= 30
+    c.drawString(50, y, f"Bezahlmethode: {payment_method}")
+    y -= 30
+    c.drawString(50, y, "Vielen Dank für Ihre Bestellung!")
+    c.save()
+
+    pdf_buffer.seek(0)
+
+    # ✅ Email-Inhalt
+    subject = f"Nudelbestellung von {name}"
+    body = f"""Hallo {name},
+
+vielen Dank für deine Bestellung!
+
+Gesamtanzahl: {total_qty} Packungen
+Gratis-Packungen: {free_packs}
+Endpreis: {total_price:.2f} €
+Bezahlmethode: {payment_method}
+
+"""
+
+    # PayPal-Link nur, wenn ausgewählt
+    if payment_method == "PayPal":
+        body += "Hier kannst du bequem per PayPal bezahlen: paypal.me/jscheel1712\n\n"
+
+    body += "Für zukünftige Bestellungen besuche: https://nudelbestellung.onrender.com\n\nLiebe Grüße,\nOpa Nudelbusiness"
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = "opasnudelbusiness@gmail.com"
+    msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
+    msg.set_content(body)
+
+    # PDF anhängen
+    msg.add_attachment(pdf_buffer.read(), maintype="application", subtype="pdf", filename="Bestellung.pdf")
+
+    gmail_user = "opasnudelbusiness@gmail.com"
+    gmail_password = os.environ.get("GMAIL_PASSWORD")
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        server.login(gmail_user, gmail_password)
+        server.send_message(msg)
+
+    return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa Nudelbusiness!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
