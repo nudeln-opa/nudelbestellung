@@ -1,0 +1,85 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f8f8f8;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  color: #d35400;
+}
+
+h3 {
+  color: #666;
+  font-weight: normal;
+}
+
+form {
+  background: white;
+  padding: 20px;
+  margin: auto;
+  width: 80%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+label {
+  display: inline-block;
+  margin: 10px;
+}
+
+input, select {
+  margin: 10px;
+  padding: 5px;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.order-table thead {
+  background: orange;
+  color: white;
+}
+
+.order-table th, .order-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.order-table img {
+  width: 80px;
+  border-radius: 8px;
+}
+
+button {
+  background: #d35400;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  margin-top: 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button:hover {
+  background: #e67e22;
+}
+
+.hartweizen-header {
+  background: #ffdddd;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.dinkel-header {
+  background: #ddffdd;
+  padding: 10px;
+  border-radius: 5px;
+}
