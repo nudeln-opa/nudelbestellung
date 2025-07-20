@@ -8,19 +8,26 @@
             font-family: Arial, sans-serif;
             background: #fffaf2;
             text-align: center;
+            margin: 0;
+            padding: 20px;
         }
         h1 {
             color: #d35400;
+            margin-bottom: 5px;
         }
         h2.slogan {
             color: #7f8c8d;
             font-style: italic;
-            margin-top: -5px;
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 25px;
         }
         table {
-            margin: 20px auto;
+            margin: 0 auto 20px;
             border-collapse: collapse;
             width: 85%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         th, td {
             border: 1px solid #ddd;
@@ -32,7 +39,12 @@
         }
         img {
             max-height: 60px;
-            border-radius: 8px;
+            border-radius: 6px;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
         }
         .summary {
             font-weight: bold;
@@ -45,21 +57,27 @@
         .order-btn {
             background: #e67e22;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 20px;
+            font-size: 1.1em;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            margin-top: 15px;
         }
         .order-btn:hover {
             background: #d35400;
         }
+        .payment-section {
+            margin-top: 20px;
+        }
     </style>
     <script>
         function updateSummary() {
-            let pricePerPack = parseFloat("{{ price_per_pack }}");
+            let pricePerPack = parseFloat("{{ price_per_pack if price_per_pack else 2.5 }}");
             let totalQty = 0;
             document.querySelectorAll(".qty-input").forEach(input => {
-                totalQty += parseInt(input.value) || 0;
+                let value = parseInt(input.value) || 0;
+                totalQty += value;
             });
             let freePacks = Math.floor(totalQty / 10);
             let totalPrice = totalQty * pricePerPack - freePacks * pricePerPack;
@@ -86,17 +104,19 @@
     <table>
         <tr>
             <th>Bild</th>
-            <th>Nudel (500 g)</th>
+            <th>Nudelsorte (500 g)</th>
             <th>Preis (€)</th>
             <th>Menge</th>
         </tr>
         {% for noodle in noodles %}
         <tr>
-            <td><img src="{{ url_for('static', filename='images/' + noodle.image) }}" alt="{{ noodle.name }}"></td>
-            <td>{{ noodle.name }}</td>
-            <td>{{ price_per_pack }}</td>
             <td>
-                <input type="number" name="qty_{{ loop.index0 }}" value="0" min="0" class="qty-input" onchange="updateSummary()">
+                <img src="{{ url_for('static', filename='images/' + noodle.image) }}" alt="{{ noodle.name }}">
+            </td>
+            <td>{{ noodle.name }}</td>
+            <td>2.50</td>
+            <td>
+                <input type="number" name="qty_{{ loop.index }}" value="0" min="0" class="qty-input" onchange="updateSummary()">
             </td>
         </tr>
         {% endfor %}
@@ -108,15 +128,16 @@
         Zu zahlen: <span id="totalPrice" class="price-highlight">0.00</span> €
     </div>
 
-    <h3>Zahlungsmethode</h3>
-    <label>
-        <input type="radio" name="payment" value="Bar" required> Barzahlung
-    </label>
-    <label>
-        <input type="radio" name="payment" value="PayPal" required> PayPal
-    </label>
-
-    <p>Bei Auswahl von PayPal: <strong>{{ paypal }}</strong></p>
+    <div class="payment-section">
+        <h3>Zahlungsmethode wählen</h3>
+        <label>
+            <input type="radio" name="payment" value="Bar" required> Barzahlung
+        </label>
+        <label>
+            <input type="radio" name="payment" value="PayPal" required> PayPal
+        </label>
+        <p>Bei PayPal-Zahlung: <strong><a href="https://paypal.me/jscheel1712" target="_blank">paypal.me/jscheel1712</a></strong></p>
+    </div>
 
     <button class="order-btn" type="submit">✅ Bestellung abschicken</button>
 </form>
