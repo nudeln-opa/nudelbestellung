@@ -1,85 +1,39 @@
 import os
-from flask import Flask, render_template, request, send_from_directory
-import smtplib, ssl
+from flask import Flask, render_template, request
+import smtplib, ssl, io
 from email.message import EmailMessage
-from io import BytesIO
-
-# PDF-Generierung
 from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.pdfgen import canvas
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# Preis pro Packung
-PRICE_PER_PACK = 2.5
-
-# Alle Nudelsorten inkl. Bild-Dateiname
+# ✅ Nudelsorten-Liste (ohne 500g, das steht jetzt in der Tabellenüberschrift)
 noodles = [
-    {"name": "Bandnudeln 6mm", "image": "Bandnudeln_6mm.JPG"},
-    {"name": "Bandnudeln 6mm 30% Vollkorn", "image": "Bandnudeln_6mm_30%_Vollkorn.JPG"},
-    {"name": "Bandnudeln 9,5mm", "image": "Bandnudeln_9,5mm.JPG"},
-    {"name": "Campanelle", "image": "Campanelle.JPG"},
-    {"name": "Casarecce", "image": "Casarecce.JPG"},
-    {"name": "Dinkelbandnudeln 6mm", "image": "Dinkelbandnudeln_6mm.JPG"},
-    {"name": "Dinkelbandnudeln 6mm 30% Vollkorn", "image": "Dinkelbandnudeln_6mm_30%_Vollkorn.JPG"},
-    {"name": "Dinkelbandnudeln 9,5mm", "image": "Dinkelbandnudeln_9,5mm.JPG"},
-    {"name": "Dinkelcampanelle", "image": "Dinkelcampanelle.JPG"},
-    {"name": "Dinkelcasarecce", "image": "Dinkelcasarecce.JPG"},
-    {"name": "Dinkelspaghetti", "image": "Dinkelspaghetti.JPG"},
-    {"name": "Dinkelspiralnudeln", "image": "Dinkelspiralnudeln.JPG"},
-    {"name": "Dinkelspätzle", "image": "Dinkelspätzle.JPG"},
-    {"name": "Dinkelsuppennudeln", "image": "Dinkelsuppennudeln.JPG"},
-    {"name": "Dinkelwellenbandnudeln", "image": "Dinkelwellenbandnudeln.JPG"},
-    {"name": "Dinkelwellenspätzle", "image": "Dinkelwellenspätzle.JPG"},
-    {"name": "Spaghetti", "image": "Spaghetti.JPG"},
-    {"name": "Spiralnudeln", "image": "Spiralnudeln.JPG"},
-    {"name": "Suppennudeln", "image": "Suppennudeln.JPG"},
-    {"name": "Wellenbandnudeln", "image": "Wellenbandnudeln.JPG"},
-    {"name": "Wellenspätzle", "image": "Wellenspätzle.JPG"},
+    "Hartweizennudeln 6mm 30% Vollkorn",
+    "Casarecce",
+    "Wellenspätzle",
+    "Bandnudeln 9,5mm",
+    "Bandnudeln 6mm",
+    "Wellenbandnudeln",
+    "Campanelle",
+    "Spiralnudeln",
+    "Spaghetti",
+    "Suppennudeln",
+    "Dinkelnudeln 6mm 30% Vollkorn",
+    "Dinkelcasarecce",
+    "Dinkelspätzle",
+    "Dinkelwellenspätzle",
+    "Dinkelbandnudeln 9,5mm",
+    "Dinkelbandnudeln 6mm",
+    "Dinkelwellenbandnudeln",
+    "Dinkelcampanelle",
+    "Dinkelspiralnudeln",
+    "Dinkelspaghetti",
+    "Dinkelsuppennudeln"
 ]
-
-# --- PDF-GENERATOR ---
-def create_pdf(name, payment_method, noodles, qtys, total_qty, free_packs, total_price):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
-    elements = []
-
-    # Titel & Slogan
-    elements.append(Paragraph(f"<b>Nudelbestellung für {name}</b>", styles['Title']))
-    elements.append(Paragraph("Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen", styles['Normal']))
-    elements.append(Paragraph("<br/>", styles['Normal']))
-
-    # Tabellen-Daten
-    data = [["Nudelsorte (500g)", "Preis (€)", "Menge", "Summe (€)"]]
-    for noodle, qty in zip(noodles, qtys):
-        if qty > 0:
-            data.append([noodle["name"], f"{PRICE_PER_PACK:.2f}", qty, f"{qty * PRICE_PER_PACK:.2f}"])
-
-    # Summen
-    data.append(["", "", "", ""])
-    data.append(["Gesamtanzahl", "", total_qty, ""])
-    data.append(["Gratis-Packungen", "", free_packs, ""])
-    data.append(["Endpreis (€)", "", "", f"{total_price:.2f}"])
-    data.append(["Zahlungsmethode", "", "", payment_method])
-
-    # Tabelle erstellen
-    table = Table(data, colWidths=[200, 70, 60, 80])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-        ("TEXTCOLOR", (0,0), (-1,0), colors.black),
-        ("ALIGN", (1,1), (-1,-1), "CENTER"),
-        ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
-        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-        ("BOTTOMPADDING", (0,0), (-1,0), 10),
-    ]))
-    elements.append(table)
-
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
 
 @app.route("/")
 def index():
@@ -87,46 +41,68 @@ def index():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    name = request.form["name"]
-    email_recipient = request.form["email"]
-    payment_method = request.form.get("payment", "Bar")  # Standard Barzahlung
+    name = request.form.get("name", "Unbekannt")
+    email_recipient = request.form.get("email")
+    payment_method = request.form.get("payment_method", "Bar")
 
-    # Mengen sammeln, leere = 0
-    qtys = []
-    for i in range(len(noodles)):
-        value = request.form.get(f"qty_{i+1}", "").strip()
-        qtys.append(int(value) if value.isdigit() else 0)
-
+    qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
 
-    # Gratispackungen berechnen (alle 10 eine gratis)
-    free_packs = total_qty // 10
+    # Gratis-Packungen (alle 10 -> 1 gratis)
+    free_packs = total_qty // 10  
 
-    total_price = total_qty * PRICE_PER_PACK - free_packs * PRICE_PER_PACK
+    price_per_pack = 2.5
+    total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
-    # --- PDF erstellen ---
-    pdf_buffer = create_pdf(name, payment_method, noodles, qtys, total_qty, free_packs, total_price)
+    # ✅ PDF mit Bestellung erzeugen
+    pdf_buffer = io.BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=A4)
+    width, height = A4
+    y = height - 50
 
-    # Mailinhalt
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, y, f"Nudelbestellung von {name}")
+    y -= 30
+
+    c.setFont("Helvetica", 12)
+    for noodle, qty in zip(noodles, qtys):
+        if qty > 0:
+            c.drawString(50, y, f"{noodle} - {qty} x {price_per_pack:.2f} € = {qty * price_per_pack:.2f} €")
+            y -= 20
+
+    y -= 20
+    c.drawString(50, y, f"Gesamtanzahl: {total_qty} Packungen")
+    y -= 20
+    c.drawString(50, y, f"Gratis-Packungen: {free_packs}")
+    y -= 20
+    c.drawString(50, y, f"Endpreis: {total_price:.2f} €")
+    y -= 30
+    c.drawString(50, y, f"Bezahlmethode: {payment_method}")
+    y -= 30
+    c.drawString(50, y, "Vielen Dank für Ihre Bestellung!")
+    c.save()
+
+    pdf_buffer.seek(0)
+
+    # ✅ Email-Inhalt
     subject = f"Nudelbestellung von {name}"
-    body = f"""
-Hallo {name},
+    body = f"""Hallo {name},
 
 vielen Dank für deine Bestellung!
 
 Gesamtanzahl: {total_qty} Packungen
 Gratis-Packungen: {free_packs}
 Endpreis: {total_price:.2f} €
+Bezahlmethode: {payment_method}
 
-Gewählte Zahlungsmethode: {payment_method}
-{"Bezahlen kannst du per PayPal unter: paypal.me/jscheel1712" if payment_method.lower() == "paypal" else ""}
-
-Für zukünftige Bestellungen: https://nudelbestellung.onrender.com
-
-Nudelige Grüße!
 """
 
-    # Mail zusammenbauen
+    # PayPal-Link nur, wenn ausgewählt
+    if payment_method == "PayPal":
+        body += "Hier kannst du bequem per PayPal bezahlen: paypal.me/jscheel1712\n\n"
+
+    body += "Für zukünftige Bestellungen besuche: https://nudelbestellung.onrender.com\n\nLiebe Grüße,\nOpa Nudelbusiness"
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "opasnudelbusiness@gmail.com"
@@ -134,14 +110,8 @@ Nudelige Grüße!
     msg.set_content(body)
 
     # PDF anhängen
-    msg.add_attachment(
-        pdf_buffer.read(),
-        maintype="application",
-        subtype="pdf",
-        filename="Bestellung.pdf"
-    )
+    msg.add_attachment(pdf_buffer.read(), maintype="application", subtype="pdf", filename="Bestellung.pdf")
 
-    # Gmail SMTP
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
 
