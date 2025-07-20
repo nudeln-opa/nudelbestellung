@@ -8,18 +8,22 @@ body {
 
 h1 {
   color: #d35400;
+  margin-bottom: 5px;
 }
 
 h3 {
   color: #666;
   font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 form {
   background: white;
   padding: 20px;
   margin: auto;
-  width: 80%;
+  width: 95%;
+  max-width: 1100px; /* ✅ Maximalbreite begrenzt */
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   border-radius: 8px;
 }
@@ -38,6 +42,7 @@ input, select {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  table-layout: fixed; /* ✅ Fixe Spaltenbreiten */
 }
 
 .order-table thead {
@@ -47,14 +52,41 @@ input, select {
 
 .order-table th, .order-table td {
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 8px;
   text-align: center;
   vertical-align: middle;
+  word-wrap: break-word;
 }
 
+/* ✅ Fixe Spaltenbreiten */
+.order-table th:nth-child(1), 
+.order-table td:nth-child(1) {
+  width: 120px; /* Bild */
+}
+
+.order-table th:nth-child(2), 
+.order-table td:nth-child(2) {
+  width: 350px; /* Name */
+}
+
+.order-table th:nth-child(3), 
+.order-table td:nth-child(3) {
+  width: 80px; /* Preis */
+}
+
+.order-table th:nth-child(4), 
+.order-table td:nth-child(4) {
+  width: 90px; /* Menge */
+}
+
+/* ✅ Bilder verkleinern */
 .order-table img {
-  width: 80px;
-  border-radius: 8px;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;   /* Kein Verzerren */
+  border-radius: 5px;
+  display: block;
+  margin: 0 auto;
 }
 
 button {
@@ -76,10 +108,12 @@ button:hover {
   background: #ffdddd;
   padding: 10px;
   border-radius: 5px;
+  font-weight: bold;
 }
 
 .dinkel-header {
   background: #ddffdd;
   padding: 10px;
   border-radius: 5px;
+  font-weight: bold;
 }
