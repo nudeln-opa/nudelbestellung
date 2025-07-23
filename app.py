@@ -10,24 +10,24 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# ✅ Nudelsorten-Liste (ohne Sonderzeichen in Bildnamen)
+# ✅ Nudelsorten in gewünschter Reihenfolge
 noodles = [
-    "Hartweizennudeln 6mm 30% Vollkorn",
+    "Bandnudeln 6mm 30% Vollkorn",
     "Casarecce",
     "Wellenspätzle",
-    "Bandnudeln 9,5mm",
     "Bandnudeln 6mm",
+    "Bandnudeln 9,5mm",
     "Wellenbandnudeln",
     "Campanelle",
     "Spiralnudeln",
     "Spaghetti",
     "Suppennudeln",
-    "Dinkelnudeln 6mm 30% Vollkorn",
+    "Dinkelbandnudeln 6mm 30% Vollkorn",
     "Dinkelcasarecce",
     "Dinkelspätzle",
     "Dinkelwellenspätzle",
-    "Dinkelbandnudeln 9,5mm",
     "Dinkelbandnudeln 6mm",
+    "Dinkelbandnudeln 9,5mm",
     "Dinkelwellenbandnudeln",
     "Dinkelcampanelle",
     "Dinkelspiralnudeln",
@@ -45,14 +45,36 @@ def submit():
     email_recipient = request.form.get("email")
     payment_method = request.form.get("payment_method", "Bar")
 
-    qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles) + 1)]
+    qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
 
     # Gratis-Packungen (alle 10 -> 1 gratis)
-    free_packs = total_qty // 10
+    free_packs = total_qty // 10  
 
     price_per_pack = 2.5
     total_price = total_qty * price_per_pack - free_packs * price_per_pack
+
+    # ✅ HTML-Tabelle für die E-Mail
+    table_html = """
+    <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse;'>
+        <tr style='background-color: #f2f2f2;'>
+            <th>Nudel</th>
+            <th>Menge</th>
+            <th>Einzelpreis (€)</th>
+            <th>Summe (€)</th>
+        </tr>
+    """
+    for noodle, qty in zip(noodles, qtys):
+        if qty > 0:
+            table_html += f"""
+            <tr>
+                <td>{noodle}</td>
+                <td>{qty}</td>
+                <td>{price_per_pack:.2f}</td>
+                <td>{qty * price_per_pack:.2f}</td>
+            </tr>
+            """
+    table_html += "</table>"
 
     # ✅ PDF mit Bestellung erzeugen
     pdf_buffer = io.BytesIO()
@@ -84,9 +106,9 @@ def submit():
 
     pdf_buffer.seek(0)
 
-    # ✅ Email-Inhalt
+    # ✅ Email-Inhalt (HTML)
     subject = f"Nudelbestellung von {name}"
-    body = f"""Hallo {name},
+    body_text = f"""Hallo {name},
 
 vielen Dank für deine Bestellung!
 
@@ -94,20 +116,34 @@ Gesamtanzahl: {total_qty} Packungen
 Gratis-Packungen: {free_packs}
 Endpreis: {total_price:.2f} €
 Bezahlmethode: {payment_method}
-
 """
-
     # PayPal-Link nur, wenn ausgewählt
     if payment_method == "PayPal":
-        body += "Hier kannst du bequem per PayPal bezahlen: paypal.me/jscheel1712\n\n"
+        body_text += "Hier kannst du bequem per PayPal bezahlen: paypal.me/jscheel1712\n\n"
 
-    body += "Für zukünftige Bestellungen besuche: https://nudelbestellung.onrender.com\n\nLiebe Grüße,\nOpa Nudelbusiness"
+    body_text += "Für zukünftige Bestellungen besuche: https://nudelbestellung.onrender.com\n\nLiebe Grüße,\nOpa Nudelbusiness"
+
+    # HTML-Version
+    body_html = f"""
+    <p>Hallo {name},</p>
+    <p>vielen Dank für deine Bestellung!</p>
+    {table_html}
+    <p><b>Gesamtanzahl:</b> {total_qty} Packungen<br>
+    <b>Gratis-Packungen:</b> {free_packs}<br>
+    <b>Endpreis:</b> {total_price:.2f} €<br>
+    <b>Bezahlmethode:</b> {payment_method}</p>
+    """
+    if payment_method == "PayPal":
+        body_html += "<p>Hier kannst du bequem per PayPal bezahlen: <a href='https://paypal.me/jscheel1712'>paypal.me/jscheel1712</a></p>"
+
+    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Liebe Grüße,<br>Opa Nudelbusiness</p>"
 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "opasnudelbusiness@gmail.com"
     msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
-    msg.set_content(body)
+    msg.set_content(body_text)
+    msg.add_alternative(body_html, subtype="html")
 
     # PDF anhängen
     msg.add_attachment(pdf_buffer.read(), maintype="application", subtype="pdf", filename="Bestellung.pdf")
