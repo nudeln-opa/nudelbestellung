@@ -1,33 +1,31 @@
 import os
 from flask import Flask, render_template, request
-import smtplib, ssl, io
+import smtplib, ssl
 from email.message import EmailMessage
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# ✅ Nudelsorten in gewünschter Reihenfolge
+# ✅ Nudelsorten
 noodles = [
-    "Bandnudeln 6mm 30% Vollkorn",
+    "Bandnudeln 6 mm 30 % Vollkorn",
     "Casarecce",
     "Wellenspätzle",
-    "Bandnudeln 6mm",
-    "Bandnudeln 9,5mm",
+    "Bandnudeln 6 mm",
+    "Bandnudeln 9,5 mm",
     "Wellenbandnudeln",
     "Campanelle",
     "Spiralnudeln",
     "Spaghetti",
     "Suppennudeln",
-    "Dinkelbandnudeln 6mm 30% Vollkorn",
+    "Dinkelbandnudeln 6 mm 30 % Vollkorn",
     "Dinkelcasarecce",
     "Dinkelspätzle",
     "Dinkelwellenspätzle",
-    "Dinkelbandnudeln 6mm",
-    "Dinkelbandnudeln 9,5mm",
+    "Dinkelbandnudeln 6 mm",
+    "Dinkelbandnudeln 9,5 mm",
     "Dinkelwellenbandnudeln",
     "Dinkelcampanelle",
     "Dinkelspiralnudeln",
@@ -47,18 +45,15 @@ def submit():
 
     qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
-
-    # Gratis-Packungen (alle 10 -> 1 gratis)
-    free_packs = total_qty // 10  
-
+    free_packs = total_qty // 10
     price_per_pack = 2.5
     total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
     # ✅ HTML-Tabelle für die E-Mail
     table_html = """
-    <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse;'>
-        <tr style='background-color: #f2f2f2;'>
-            <th>Nudel</th>
+    <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; width: 80%;'>
+        <tr style='background:#f2f2f2;'>
+            <th style='text-align:left;'>Nudel</th>
             <th>Menge</th>
             <th>Einzelpreis (€)</th>
             <th>Summe (€)</th>
@@ -69,61 +64,15 @@ def submit():
             table_html += f"""
             <tr>
                 <td>{noodle}</td>
-                <td>{qty}</td>
-                <td>{price_per_pack:.2f}</td>
-                <td>{qty * price_per_pack:.2f}</td>
+                <td style='text-align:center;'>{qty}</td>
+                <td style='text-align:center;'>{price_per_pack:.2f}</td>
+                <td style='text-align:right;'>{qty * price_per_pack:.2f}</td>
             </tr>
             """
     table_html += "</table>"
 
-    # ✅ PDF mit Bestellung erzeugen
-    pdf_buffer = io.BytesIO()
-    c = canvas.Canvas(pdf_buffer, pagesize=A4)
-    width, height = A4
-    y = height - 50
-
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, y, f"Nudelbestellung von {name}")
-    y -= 30
-
-    c.setFont("Helvetica", 12)
-    for noodle, qty in zip(noodles, qtys):
-        if qty > 0:
-            c.drawString(50, y, f"{noodle} - {qty} x {price_per_pack:.2f} € = {qty * price_per_pack:.2f} €")
-            y -= 20
-
-    y -= 20
-    c.drawString(50, y, f"Gesamtanzahl: {total_qty} Packungen")
-    y -= 20
-    c.drawString(50, y, f"Gratis-Packungen: {free_packs}")
-    y -= 20
-    c.drawString(50, y, f"Endpreis: {total_price:.2f} €")
-    y -= 30
-    c.drawString(50, y, f"Bezahlmethode: {payment_method}")
-    y -= 30
-    c.drawString(50, y, "Vielen Dank für Ihre Bestellung!")
-    c.save()
-
-    pdf_buffer.seek(0)
-
-    # ✅ Email-Inhalt (HTML)
+    # ✅ Email-Inhalt
     subject = f"Nudelbestellung von {name}"
-    body_text = f"""Hallo {name},
-
-vielen Dank für deine Bestellung!
-
-Gesamtanzahl: {total_qty} Packungen
-Gratis-Packungen: {free_packs}
-Endpreis: {total_price:.2f} €
-Bezahlmethode: {payment_method}
-"""
-    # PayPal-Link nur, wenn ausgewählt
-    if payment_method == "PayPal":
-        body_text += "Hier kannst du bequem per PayPal bezahlen: paypal.me/jscheel1712\n\n"
-
-    body_text += "Für zukünftige Bestellungen besuche: https://nudelbestellung.onrender.com\n\nLiebe Grüße,\nOpa Nudelbusiness"
-
-    # HTML-Version
     body_html = f"""
     <p>Hallo {name},</p>
     <p>vielen Dank für deine Bestellung!</p>
@@ -136,27 +85,24 @@ Bezahlmethode: {payment_method}
     if payment_method == "PayPal":
         body_html += "<p>Hier kannst du bequem per PayPal bezahlen: <a href='https://paypal.me/jscheel1712'>paypal.me/jscheel1712</a></p>"
 
-    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Liebe Grüße,<br>Opa Nudelbusiness</p>"
+    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Opa</p>"
 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "opasnudelbusiness@gmail.com"
     msg["To"] = ", ".join([email_recipient, "opasnudelbusiness@gmail.com"])
-    msg.set_content(body_text)
+    msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
     msg.add_alternative(body_html, subtype="html")
 
-    # PDF anhängen
-    msg.add_attachment(pdf_buffer.read(), maintype="application", subtype="pdf", filename="Bestellung.pdf")
-
+    # ✅ SMTP Versand
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
-
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(gmail_user, gmail_password)
         server.send_message(msg)
 
-    return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa Nudelbusiness!"
+    return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa!"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
