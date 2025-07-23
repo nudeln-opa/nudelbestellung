@@ -16,19 +16,20 @@
         }
         h3 {
             text-align: center;
-            color: #444;
-            font-size: 22px;
+            color: #777; /* grau */
+            font-size: 26px; /* noch größer */
+            font-weight: bold;
         }
 
-        /* ✅ Tabelle zentrieren & schmaler */
+        /* ✅ Tabelle noch schmaler */
         .table-container {
             display: flex;
             justify-content: center;
             margin-top: 20px;
         }
         table {
-            width: 80%; /* nur 80% statt 100% */
-            max-width: 1000px; /* damit sie auf großen Monitoren nicht riesig wird */
+            width: 70%; /* noch schmaler */
+            max-width: 900px;
             border-collapse: collapse;
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -48,7 +49,7 @@
             border-radius: 5px;
         }
 
-        /* ✅ Zusammenfassung zentrieren */
+        /* ✅ Zusammenfassung zentriert */
         .summary {
             margin-top: 20px;
             font-size: 16px;
@@ -58,17 +59,31 @@
             color: #e67e22;
         }
 
+        /* ✅ Formular kompakter mit Label links */
         .form-section {
             margin-top: 20px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 400px;
+        }
+        .form-row label {
+            width: 80px;
+            text-align: right;
+            font-weight: bold;
         }
         input[type="text"], input[type="email"], select {
             padding: 8px;
-            width: 300px;
-            margin: 5px auto;
+            width: 250px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            display: block;
         }
         input[type="number"] {
             width: 60px;
@@ -94,11 +109,16 @@
     <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
 
     <form id="orderForm" method="POST" action="/submit">
+        <!-- ✅ Name & Email in schöner Form -->
         <div class="form-section">
-            <label>Name:</label>
-            <input type="text" name="name" required>
-            <label>Email:</label>
-            <input type="email" name="email" required>
+            <div class="form-row">
+                <label for="name">Name:</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-row">
+                <label for="email">Email:</label>
+                <input type="email" name="email" required>
+            </div>
         </div>
 
         <div class="table-container">
@@ -115,7 +135,7 @@
                     <td>
                         <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
                     </td>
-                    <td>2.5</td>
+                    <td>2,50</td> <!-- ✅ Immer 2,50 -->
                     <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
                 </tr>
                 {% endfor %}
@@ -129,18 +149,20 @@
         </div>
 
         <div class="form-section">
-            <label>Bezahlmethode:</label>
-            <select name="payment_method">
-                <option value="Bar">Bar</option>
-                <option value="PayPal">PayPal</option>
-            </select>
+            <div class="form-row">
+                <label>Bezahlung:</label>
+                <select name="payment_method">
+                    <option value="Bar">Bar</option>
+                    <option value="PayPal">PayPal</option>
+                </select>
+            </div>
         </div>
 
         <button type="submit">Bestellen</button>
     </form>
 
     <script>
-        const pricePerPack = 2.5;
+        const pricePerPack = 2.50; // ✅ immer mit zwei Nachkommastellen
         function updateSummary() {
             let totalQty = 0;
             document.querySelectorAll('input[type="number"]').forEach(input => {
