@@ -17,19 +17,19 @@
         h3 {
             text-align: center;
             color: #777; /* grau */
-            font-size: 26px; /* noch größer */
+            font-size: 26px; /* größer */
             font-weight: bold;
         }
 
-        /* ✅ Tabelle noch schmaler */
+        /* ✅ Haupt-Tabelle noch schmaler */
         .table-container {
             display: flex;
             justify-content: center;
             margin-top: 20px;
         }
         table {
-            width: 70%; /* noch schmaler */
-            max-width: 900px;
+            width: 60%; /* jetzt schmaler */
+            max-width: 800px;
             border-collapse: collapse;
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -49,17 +49,28 @@
             border-radius: 5px;
         }
 
-        /* ✅ Zusammenfassung zentriert */
-        .summary {
+        /* ✅ Zusammenfassung als 3-Spalten-Tabelle */
+        .summary-container {
+            display: flex;
+            justify-content: center;
             margin-top: 20px;
-            font-size: 16px;
-            text-align: center;
         }
-        .summary b {
-            color: #e67e22;
+        .summary-table {
+            border-collapse: collapse;
+            width: 60%;
+            max-width: 800px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .summary-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #d35400;
         }
 
-        /* ✅ Formular kompakter mit Label links */
+        /* ✅ Formular schöner mit Label links */
         .form-section {
             margin-top: 20px;
             display: flex;
@@ -89,15 +100,18 @@
             width: 60px;
             text-align: center;
         }
+
+        /* ✅ Größerer Bestellbutton */
         button {
             background: #e67e22;
             color: white;
-            padding: 10px 20px;
+            font-size: 18px;
+            padding: 14px 30px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             display: block;
-            margin: 20px auto;
+            margin: 30px auto;
         }
         button:hover {
             background: #d35400;
@@ -121,6 +135,7 @@
             </div>
         </div>
 
+        <!-- ✅ Haupt-Tabelle -->
         <div class="table-container">
             <table>
                 <tr>
@@ -135,19 +150,25 @@
                     <td>
                         <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
                     </td>
-                    <td>2,50</td> <!-- ✅ Immer 2,50 -->
+                    <td>2,50</td> <!-- ✅ Immer mit 2 Nachkommastellen -->
                     <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
                 </tr>
                 {% endfor %}
             </table>
         </div>
 
-        <div class="summary">
-            <p><b>Gesamtanzahl:</b> <span id="totalQty">0</span> Packungen</p>
-            <p><b>Gratis-Packungen:</b> <span id="freePacks">0</span></p>
-            <p><b>Zu zahlen:</b> <span id="totalPrice">0.00</span> €</p>
+        <!-- ✅ Kompakte Zusammenfassung in einer Tabelle -->
+        <div class="summary-container">
+            <table class="summary-table">
+                <tr>
+                    <td>Gesamtanzahl: <span id="totalQty">0</span> Packungen</td>
+                    <td>Gratis-Packungen: <span id="freePacks">0</span></td>
+                    <td>Zu zahlen: <span id="totalPrice">0.00</span> €</td>
+                </tr>
+            </table>
         </div>
 
+        <!-- ✅ Bezahlmethode -->
         <div class="form-section">
             <div class="form-row">
                 <label>Bezahlung:</label>
@@ -158,11 +179,11 @@
             </div>
         </div>
 
-        <button type="submit">Bestellen</button>
+        <button type="submit">✅ Bestellung abschicken</button>
     </form>
 
     <script>
-        const pricePerPack = 2.50; // ✅ immer mit zwei Nachkommastellen
+        const pricePerPack = 2.50;
         function updateSummary() {
             let totalQty = 0;
             document.querySelectorAll('input[type="number"]').forEach(input => {
