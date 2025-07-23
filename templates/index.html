@@ -17,7 +17,7 @@
         h3 {
             text-align: center;
             color: #444;
-            font-size: 20px;
+            font-size: 22px; /* größerer Werbeslogan */
         }
         table {
             width: 100%;
@@ -36,7 +36,7 @@
             color: white;
         }
         img {
-            width: 160px;
+            width: 160px; /* doppelt so groß */
             height: auto;
             border-radius: 5px;
         }
@@ -76,7 +76,7 @@
 </head>
 <body>
     <h1>🍝 Nudelbestellung</h1>
-    <h3 style="font-size: 22px;">Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
+    <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
 
     <form id="orderForm" method="POST" action="/submit">
         <div class="form-section">
@@ -97,7 +97,7 @@
             <tr>
                 <td>{{ noodle }}</td>
                 <td>
-                    <img src="{{ url_for('static', filename='images/' + noodle.replace(' ', '_').replace(',', '_').replace('%', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
+                    <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
                 </td>
                 <td>2.5</td>
                 <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
