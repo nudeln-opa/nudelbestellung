@@ -17,12 +17,19 @@
         h3 {
             text-align: center;
             color: #444;
-            font-size: 22px; /* größerer Werbeslogan */
+            font-size: 22px;
+        }
+
+        /* ✅ Tabelle zentrieren & schmaler */
+        .table-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
         }
         table {
-            width: 100%;
+            width: 80%; /* nur 80% statt 100% */
+            max-width: 1000px; /* damit sie auf großen Monitoren nicht riesig wird */
             border-collapse: collapse;
-            margin-top: 20px;
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -36,26 +43,32 @@
             color: white;
         }
         img {
-            width: 160px; /* doppelt so groß */
+            width: 160px;
             height: auto;
             border-radius: 5px;
         }
+
+        /* ✅ Zusammenfassung zentrieren */
         .summary {
             margin-top: 20px;
             font-size: 16px;
+            text-align: center;
         }
         .summary b {
             color: #e67e22;
         }
+
         .form-section {
             margin-top: 20px;
+            text-align: center;
         }
         input[type="text"], input[type="email"], select {
             padding: 8px;
-            width: calc(100% - 20px);
-            margin-bottom: 10px;
+            width: 300px;
+            margin: 5px auto;
             border: 1px solid #ccc;
             border-radius: 5px;
+            display: block;
         }
         input[type="number"] {
             width: 60px;
@@ -68,6 +81,8 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            display: block;
+            margin: 20px auto;
         }
         button:hover {
             background: #d35400;
@@ -86,24 +101,26 @@
             <input type="email" name="email" required>
         </div>
 
-        <table>
-            <tr>
-                <th>Nudel (500g)</th>
-                <th>Bild</th>
-                <th>Preis (€)</th>
-                <th>Menge</th>
-            </tr>
-            {% for noodle in noodles %}
-            <tr>
-                <td>{{ noodle }}</td>
-                <td>
-                    <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
-                </td>
-                <td>2.5</td>
-                <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
-            </tr>
-            {% endfor %}
-        </table>
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>Nudel (500g)</th>
+                    <th>Bild</th>
+                    <th>Preis (€)</th>
+                    <th>Menge</th>
+                </tr>
+                {% for noodle in noodles %}
+                <tr>
+                    <td>{{ noodle }}</td>
+                    <td>
+                        <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
+                    </td>
+                    <td>2.5</td>
+                    <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
 
         <div class="summary">
             <p><b>Gesamtanzahl:</b> <span id="totalQty">0</span> Packungen</p>
