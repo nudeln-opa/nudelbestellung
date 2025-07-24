@@ -21,7 +21,7 @@
             font-weight: bold;
         }
 
-        /* ✅ Haupt-Tabelle noch schmaler */
+        /* ✅ Haupt-Tabelle schmal & kompakt */
         .table-container {
             display: flex;
             justify-content: center;
@@ -49,15 +49,15 @@
             border-radius: 5px;
         }
 
-        /* ✅ Hintergrund je nach Nudelsorte – leicht intensiver */
+        /* ✅ Hintergrund je nach Nudelsorte */
         .dinkel-row {
-            background-color: rgba(0, 128, 0, 0.08); /* etwas mehr Grün */
+            background-color: rgba(0, 128, 0, 0.08); /* leichtes Grün */
         }
         .normal-row {
-            background-color: rgba(255, 0, 0, 0.05); /* etwas mehr Rot */
+            background-color: rgba(255, 0, 0, 0.05); /* leichtes Rot */
         }
 
-        /* ✅ Zusammenfassung als 3-Spalten-Tabelle */
+        /* ✅ Kompakte Zusammenfassung */
         .summary-container {
             display: flex;
             justify-content: center;
@@ -74,11 +74,15 @@
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
+        }
+        .summary-table .label {
             font-weight: bold;
-            color: black;
+        }
+        .summary-table .value {
+            font-weight: normal; /* ✅ Werte NICHT fett */
         }
 
-        /* ✅ Formular schöner mit Label links */
+        /* ✅ Formular kompakt mit Label links */
         .form-section {
             margin-top: 20px;
             display: flex;
@@ -91,7 +95,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            width: 450px; /* etwas mehr Platz */
+            width: 450px;
         }
         .form-row label {
             width: 80px;
@@ -100,15 +104,15 @@
         }
         input[type="text"], input[type="email"] {
             padding: 10px;
-            width: 300px; /* breiter */
+            width: 300px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
 
-        /* ✅ Breitere Bezahl-Auswahl */
+        /* ✅ Bezahl-Auswahl breiter & gut lesbar */
         select {
             padding: 12px;
-            width: 300px; /* etwas breiter */
+            width: 300px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -119,7 +123,7 @@
             text-align: center;
         }
 
-        /* ✅ Bestellbutton jetzt mittlere Größe */
+        /* ✅ Bestellbutton mittlere Größe */
         button {
             background: #e67e22;
             color: white;
@@ -163,8 +167,9 @@
                     <th>Menge</th>
                 </tr>
                 {% for noodle in noodles %}
+                {% set display_name = noodle.replace('mm', ' mm').replace('%', ' %') %}
                 <tr class="{% if noodle.startswith('Dinkel') %}dinkel-row{% else %}normal-row{% endif %}">
-                    <td>{{ noodle }}</td>
+                    <td>{{ display_name }}</td>
                     <td>
                         <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
                     </td>
@@ -179,9 +184,9 @@
         <div class="summary-container">
             <table class="summary-table">
                 <tr>
-                    <td>Gesamtanzahl: <span id="totalQty">0</span> Packungen</td>
-                    <td>Gratis-Packungen: <span id="freePacks">0</span></td>
-                    <td>Zu zahlen: <span id="totalPrice">0.00</span> €</td>
+                    <td><span class="label">Gesamtanzahl:</span> <span class="value" id="totalQty">0</span> Packungen</td>
+                    <td><span class="label">Gratis-Packungen:</span> <span class="value" id="freePacks">0</span></td>
+                    <td><span class="label">Zu zahlen:</span> <span class="value" id="totalPrice">0.00</span> €</td>
                 </tr>
             </table>
         </div>
