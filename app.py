@@ -8,7 +8,7 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# ✅ Nudelsorten
+# ✅ Finale Reihenfolge der Nudeln (Dateinamen bleiben gleich)
 noodles = [
     "Bandnudeln 6mm 30% Vollkorn",
     "Casarecce",
@@ -46,10 +46,10 @@ def submit():
     qtys = [int(request.form.get(f"qty_{i}", 0) or 0) for i in range(1, len(noodles)+1)]
     total_qty = sum(qtys)
     free_packs = total_qty // 10
-    price_per_pack = 2.5
+    price_per_pack = 2.50
     total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
-    # ✅ HTML-Tabelle für die E-Mail
+    # ✅ HTML-Tabelle für die E-Mail – mit Leerzeichen vor "mm" und "%"
     table_html = """
     <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; width: 70%;'>
         <tr style='background:#f2f2f2;'>
@@ -61,9 +61,11 @@ def submit():
     """
     for noodle, qty in zip(noodles, qtys):
         if qty > 0:
+            # ✅ Anzeige optimieren → Leerzeichen einfügen
+            display_name = noodle.replace("mm", " mm").replace("%", " %")
             table_html += f"""
             <tr>
-                <td>{noodle}</td>
+                <td>{display_name}</td>
                 <td style='text-align:center;'>{qty}</td>
                 <td style='text-align:center;'>{price_per_pack:.2f}</td>
                 <td style='text-align:right;'>{qty * price_per_pack:.2f}</td>
@@ -71,22 +73,32 @@ def submit():
             """
     table_html += "</table>"
 
-    # ✅ Email-Inhalt
+    # ✅ Email-Inhalt mit Gratis-Packungen & Leerzeichen bei mm/%
     subject = f"Nudelbestellung von {name}"
     body_html = f"""
     <p>Hallo {name},</p>
     <p>vielen Dank für deine Bestellung!</p>
     {table_html}
-    <p><b>Gesamtanzahl:</b> {total_qty} Packungen<br>
+    <p>
+    <b>Gesamtanzahl:</b> {total_qty} Packungen<br>
     <b>Gratis-Packungen:</b> {free_packs}<br>
     <b>Endpreis:</b> {total_price:.2f} €<br>
-    <b>Bezahlmethode:</b> {payment_method}</p>
+    <b>Bezahlmethode:</b> {payment_method}
+    </p>
     """
+
+    # ✅ PayPal-Link nur falls gewählt
     if payment_method == "PayPal":
         body_html += "<p>Hier kannst du bequem per PayPal bezahlen: <a href='https://paypal.me/jscheel1712'>paypal.me/jscheel1712</a></p>"
 
-    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Nudelige Grüße,<br>Opa</p>"
+    # ✅ Footer
+    body_html += """
+    <p>Für zukünftige Bestellungen besuche: 
+    <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p>
+    <p>Nudelige Grüße,<br>Opa</p>
+    """
 
+    # ✅ Mail zusammenbauen
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = "opasnudelbusiness@gmail.com"
@@ -94,6 +106,7 @@ def submit():
     msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
     msg.add_alternative(body_html, subtype="html")
 
+    # ✅ Mail versenden
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
     context = ssl.create_default_context()
