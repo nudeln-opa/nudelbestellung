@@ -51,7 +51,7 @@ def submit():
 
     # ✅ HTML-Tabelle für die E-Mail
     table_html = """
-    <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; width: 80%;'>
+    <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; width: 70%;'>
         <tr style='background:#f2f2f2;'>
             <th style='text-align:left;'>Nudel</th>
             <th>Menge</th>
@@ -85,7 +85,7 @@ def submit():
     if payment_method == "PayPal":
         body_html += "<p>Hier kannst du bequem per PayPal bezahlen: <a href='https://paypal.me/jscheel1712'>paypal.me/jscheel1712</a></p>"
 
-    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Opa</p>"
+    body_html += "<p>Für zukünftige Bestellungen besuche: <a href='https://nudelbestellung.onrender.com'>nudelbestellung.onrender.com</a></p><p>Nudelige Grüße,<br>Opa</p>"
 
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -94,7 +94,6 @@ def submit():
     msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
     msg.add_alternative(body_html, subtype="html")
 
-    # ✅ SMTP Versand
     gmail_user = "opasnudelbusiness@gmail.com"
     gmail_password = os.environ.get("GMAIL_PASSWORD")
     context = ssl.create_default_context()
