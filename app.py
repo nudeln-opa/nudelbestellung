@@ -108,18 +108,20 @@ def submit():
     msg.add_alternative(body_html, subtype="html")
 
     # ✅ Mail asynchron versenden, um Render-Timeout zu vermeiden
-    def send_email_async(msg):
-        import smtplib, ssl
-        mailjet_user = os.environ.get("MAILJET_USER")
-        mailjet_pass = os.environ.get("MAILJET_PASS")
-        context = ssl.create_default_context()
-        try:
-            with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=context) as server:
-                server.login(mailjet_user, mailjet_pass)
-                server.send_message(msg)
-                print("✅ Mail erfolgreich gesendet.")
-        except Exception as e:
-            print("❌ Fehler beim E-Mail-Versand:", e)
+def send_email_async(msg):
+    import smtplib, ssl
+    mailjet_user = os.environ.get("MAILJET_USER")
+    mailjet_pass = os.environ.get("MAILJET_PASS")
+    context = ssl.create_default_context()
+    try:
+        with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=context) as server:
+            print("📨 Versuche, Mail zu senden über Mailjet...")
+            server.login(mailjet_user, mailjet_pass)
+            server.send_message(msg)
+            print("✅ Mail erfolgreich gesendet.")
+    except Exception as e:
+        print("❌ Fehler beim E-Mail-Versand:", e)
+
 
     threading.Thread(target=send_email_async, args=(msg,)).start()
 
