@@ -130,3 +130,5 @@ def send_email_async(msg):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+    
+return render_template("index.html", message="✅ Bestellung erfolgreich gesendet!")
