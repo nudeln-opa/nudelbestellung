@@ -106,15 +106,22 @@ def submit():
     msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
     msg.add_alternative(body_html, subtype="html")
 
-    # ✅ Mail versenden
+# ✅ Mail asynchron versenden, um Render-Timeout zu vermeiden
+def send_email_async(msg):
+    import smtplib, ssl
     mailjet_user = os.environ.get("MAILJET_USER")
     mailjet_pass = os.environ.get("MAILJET_PASS")
-
-    # 📤 Mail über Mailjet versenden (SSL auf Port 465)
     context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=ssl.create_default_context()) as server:
-        server.login(mailjet_user, mailjet_pass)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=context) as server:
+            server.login(mailjet_user, mailjet_pass)
+            server.send_message(msg)
+            print("✅ Mail erfolgreich gesendet.")
+    except Exception as e:
+         print("❌ Fehler beim E-Mail-Versand:", e)
+
+# 🧵 Starte Hintergrund-Thread, damit Render nicht blockiert
+threading.Thread(target=send_email_async, args=(msg,)).start()
 
     return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa!"
 
