@@ -118,7 +118,7 @@ def send_email_async(msg):
             server.send_message(msg)
             print("✅ Mail erfolgreich gesendet.")
     except Exception as e:
-         print("❌ Fehler beim E-Mail-Versand:", e)
+        print("❌ Fehler beim E-Mail-Versand:", e)
 
 # 🧵 Starte Hintergrund-Thread, damit Render nicht blockiert
 threading.Thread(target=send_email_async, args=(msg,)).start()
