@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request
 import smtplib, ssl
 from email.message import EmailMessage
+import threading  # ✅ hinzugefügt für asynchronen Mailversand
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
@@ -106,24 +107,24 @@ def submit():
     msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
     msg.add_alternative(body_html, subtype="html")
 
-# ✅ Mail asynchron versenden, um Render-Timeout zu vermeiden
-def send_email_async(msg):
-    import smtplib, ssl
-    mailjet_user = os.environ.get("MAILJET_USER")
-    mailjet_pass = os.environ.get("MAILJET_PASS")
-    context = ssl.create_default_context()
-    try:
-        with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=context) as server:
-            server.login(mailjet_user, mailjet_pass)
-            server.send_message(msg)
-            print("✅ Mail erfolgreich gesendet.")
-    except Exception as e:
-        print("❌ Fehler beim E-Mail-Versand:", e)
+    # ✅ Mail asynchron versenden, um Render-Timeout zu vermeiden
+    def send_email_async(msg):
+        import smtplib, ssl
+        mailjet_user = os.environ.get("MAILJET_USER")
+        mailjet_pass = os.environ.get("MAILJET_PASS")
+        context = ssl.create_default_context()
+        try:
+            with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=context) as server:
+                server.login(mailjet_user, mailjet_pass)
+                server.send_message(msg)
+                print("✅ Mail erfolgreich gesendet.")
+        except Exception as e:
+            print("❌ Fehler beim E-Mail-Versand:", e)
 
-# 🧵 Starte Hintergrund-Thread, damit Render nicht blockiert
-threading.Thread(target=send_email_async, args=(msg,)).start()
+    threading.Thread(target=send_email_async, args=(msg,)).start()
 
     return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa!"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
