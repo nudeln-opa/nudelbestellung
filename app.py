@@ -107,11 +107,13 @@ def submit():
     msg.add_alternative(body_html, subtype="html")
 
     # ✅ Mail versenden
-    gmail_user = "opasnudelbusiness@gmail.com"
-    gmail_password = os.environ.get("GMAIL_PASSWORD")
+    mailjet_user = os.environ.get("MAILJET_USER")
+    mailjet_pass = os.environ.get("MAILJET_PASS")
+
+    # 📤 Mail über Mailjet versenden (SSL auf Port 465)
     context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-        server.login(gmail_user, gmail_password)
+    with smtplib.SMTP_SSL("in-v3.mailjet.com", 465, context=ssl.create_default_context()) as server:
+        server.login(mailjet_user, mailjet_pass)
         server.send_message(msg)
 
     return f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa!"
