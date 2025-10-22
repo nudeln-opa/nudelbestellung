@@ -125,6 +125,8 @@ def send_email_async(msg):
 
     threading.Thread(target=send_email_async, args=(msg,)).start()
 
+print(f"✅ Bestellung erfolgreich gesendet an {email_recipient} und Opa!")
+
 return render_template("index.html", message="✅ Bestellung erfolgreich gesendet!")
 
 if __name__ == "__main__":
