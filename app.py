@@ -162,10 +162,10 @@ def submit():
     print(f"✅ Bestellung erfolgreich vorbereitet für {recipients}")
 
     return render_template(
-        "index.html",
-        noodles=noodles,
-        message="✅ Bestellung erfolgreich gesendet! Falls keine E-Mail ankommt, bitte kurz bei Opa melden."
-    )
+    "index.html",
+    noodles=noodles,
+    message="✅ Bestellung erfolgreich gesendet."
+)
 
 
 if __name__ == "__main__":
