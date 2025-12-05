@@ -21,7 +21,15 @@
             font-weight: bold;
         }
 
-        /* ✅ Haupt-Tabelle schmal & kompakt */
+        /* Erfolgsmeldung */
+        .message {
+            text-align: center;
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Haupt-Tabelle schmal & kompakt */
         .table-container {
             display: flex;
             justify-content: center;
@@ -49,7 +57,7 @@
             border-radius: 5px;
         }
 
-        /* ✅ Hintergrund je nach Nudelsorte */
+        /* Hintergrund je nach Nudelsorte */
         .dinkel-row {
             background-color: rgba(0, 128, 0, 0.08); /* leichtes Grün */
         }
@@ -57,7 +65,7 @@
             background-color: rgba(255, 0, 0, 0.05); /* leichtes Rot */
         }
 
-        /* ✅ Kompakte Zusammenfassung */
+        /* Kompakte Zusammenfassung */
         .summary-container {
             display: flex;
             justify-content: center;
@@ -79,10 +87,10 @@
             font-weight: bold;
         }
         .summary-table .value {
-            font-weight: normal; /* ✅ Werte NICHT fett */
+            font-weight: normal; /* Werte NICHT fett */
         }
 
-        /* ✅ Formular kompakt mit Label links */
+        /* Formular kompakt mit Label links */
         .form-section {
             margin-top: 20px;
             display: flex;
@@ -109,7 +117,7 @@
             border-radius: 5px;
         }
 
-        /* ✅ Bezahl-Auswahl breiter & gut lesbar */
+        /* Bezahl-Auswahl breiter & gut lesbar */
         select {
             padding: 12px;
             width: 300px;
@@ -123,7 +131,7 @@
             text-align: center;
         }
 
-        /* ✅ Bestellbutton mittlere Größe */
+        /* Bestellbutton mittlere Größe */
         button {
             background: #e67e22;
             color: white;
@@ -144,8 +152,12 @@
     <h1>🍝 Nudelbestellung</h1>
     <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
 
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% endif %}
+
     <form id="orderForm" method="POST" action="/submit">
-        <!-- ✅ Name & Email -->
+        <!-- Name & Email -->
         <div class="form-section">
             <div class="form-row">
                 <label for="name">Name:</label>
@@ -157,7 +169,7 @@
             </div>
         </div>
 
-        <!-- ✅ Haupt-Tabelle -->
+        <!-- Haupt-Tabelle -->
         <div class="table-container">
             <table>
                 <tr>
@@ -180,7 +192,7 @@
             </table>
         </div>
 
-        <!-- ✅ Kompakte Zusammenfassung -->
+        <!-- Kompakte Zusammenfassung -->
         <div class="summary-container">
             <table class="summary-table">
                 <tr>
@@ -191,7 +203,7 @@
             </table>
         </div>
 
-        <!-- ✅ Bezahlmethode -->
+        <!-- Bezahlmethode -->
         <div class="form-section">
             <div class="form-row">
                 <label>Bezahlung:</label>
