@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, request
-import smtplib, ssl
-from email.message import EmailMessage
+import requests
 import threading
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -9,7 +8,7 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-# ✅ Finale Reihenfolge der Nudeln (Dateinamen bleiben gleich)
+# Finale Reihenfolge der Nudeln (Dateinamen bleiben gleich)
 noodles = [
     "Bandnudeln 6mm 30% Vollkorn",
     "Casarecce",
@@ -34,22 +33,62 @@ noodles = [
     "Dinkelsuppennudeln"
 ]
 
-# ✅ Gmail Zugangsdaten aus Umgebungsvariablen
-GMAIL_USER = os.environ.get("GMAIL_USER")  # z.B. "opasnudelbusiness@gmail.com"
-GMAIL_PASS = os.environ.get("GMAIL_PASS")  # App-Passwort von Google (nicht dein normales!)
+# Mailjet Zugangsdaten aus Environment
+MAILJET_API_KEY = os.environ.get("MAILJET_API_KEY")
+MAILJET_API_SECRET = os.environ.get("MAILJET_API_SECRET")
 
-def send_email_async(msg: EmailMessage):
-    """E-Mail in separatem Thread per Gmail senden."""
-    context = ssl.create_default_context()
+# Fester Absender (nur im Code, NICHT als ENV nötig)
+MAILJET_SENDER_EMAIL = "opasnudelbusiness@gmail.com"
+MAILJET_SENDER_NAME = "Opas Nudelbusiness"
+
+
+def send_email_mailjet(subject: str, body_html: str, recipients: list[str]):
+    """
+    E-Mail per Mailjet HTTP-API senden (HTTPS, daher auf Render Free erlaubt).
+    """
+    if not MAILJET_API_KEY or not MAILJET_API_SECRET:
+        print("❌ MAILJET_API_KEY oder MAILJET_API_SECRET nicht gesetzt!")
+        return
+
+    url = "https://api.mailjet.com/v3.1/send"
+    data = {
+        "Messages": [
+            {
+                "From": {
+                    "Email": MAILJET_SENDER_EMAIL,
+                    "Name": MAILJET_SENDER_NAME,
+                },
+                "To": [{"Email": r} for r in recipients],
+                "Subject": subject,
+                "TextPart": "Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.",
+                "HTMLPart": body_html,
+            }
+        ]
+    }
+
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            print("📨 Versuche, Mail zu senden über Gmail...")
-            server.login(GMAIL_USER, GMAIL_PASS)
-            server.send_message(msg)
-            print("✅ Mail erfolgreich gesendet.")
+        print("📨 Versuche, Mail über Mailjet-API zu senden...")
+        resp = requests.post(
+            url,
+            auth=(MAILJET_API_KEY, MAILJET_API_SECRET),
+            json=data,
+            timeout=10,
+        )
+        print("📬 Mailjet-Statuscode:", resp.status_code)
+        print("📬 Mailjet-Antwort:", resp.text)
+        resp.raise_for_status()
+        print("✅ Mailjet: E-Mail erfolgreich gesendet.")
     except Exception as e:
-        # Das siehst du im Render-Log
-        print("❌ Fehler beim E-Mail-Versand:", e)
+        print("❌ Fehler beim E-Mail-Versand über Mailjet:", e)
+
+
+def send_email_async(subject: str, body_html: str, recipients: list[str]):
+    """Wrapper, um den Mailversand in einem eigenen Thread zu starten."""
+    threading.Thread(
+        target=send_email_mailjet,
+        args=(subject, body_html, recipients),
+        daemon=True,
+    ).start()
 
 
 @app.route("/")
@@ -69,7 +108,7 @@ def submit():
     price_per_pack = 2.50
     total_price = total_qty * price_per_pack - free_packs * price_per_pack
 
-    # ✅ HTML-Tabelle für die E-Mail – mit Leerzeichen vor "mm" und "%"
+    # HTML-Tabelle für die E-Mail mit Leerzeichen vor "mm" und "%"
     table_html = """
     <table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; width: 70%;'>
         <tr style='background:#f2f2f2;'>
@@ -92,7 +131,6 @@ def submit():
             """
     table_html += "</table>"
 
-    # ✅ Email-Inhalt mit Gratis-Packungen & Leerzeichen bei mm/%
     subject = f"Nudelbestellung von {name}"
     body_html = f"""
     <p>Hallo {name},</p>
@@ -115,23 +153,19 @@ def submit():
     <p>Nudelige Grüße,<br>Opa</p>
     """
 
-    # ✅ Mail zusammenbauen
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = GMAIL_USER
-    # an Besteller und an Opa
-    recipients = [addr for addr in [email_recipient, GMAIL_USER] if addr]
-    msg["To"] = ", ".join(recipients)
+    # Empfänger: Besteller + Opa
+    recipients = [addr for addr in [email_recipient, MAILJET_SENDER_EMAIL] if addr]
 
-    msg.set_content("Bitte HTML-E-Mail aktivieren, um die Bestellung zu sehen.")
-    msg.add_alternative(body_html, subtype="html")
-
-    # ✅ Asynchron senden (damit Render die Anfrage nicht abbricht)
-    threading.Thread(target=send_email_async, args=(msg,)).start()
+    # Asynchron senden
+    send_email_async(subject, body_html, recipients)
 
     print(f"✅ Bestellung erfolgreich vorbereitet für {recipients}")
 
-    return render_template("index.html", noodles=noodles, message="✅ Bestellung erfolgreich gesendet!")
+    return render_template(
+        "index.html",
+        noodles=noodles,
+        message="✅ Bestellung erfolgreich gesendet! Falls keine E-Mail ankommt, bitte kurz bei Opa melden."
+    )
 
 
 if __name__ == "__main__":
