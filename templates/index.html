@@ -171,6 +171,14 @@
         button:hover {
             background: #d35400;
         }
+
+        .spam-hint {
+            text-align: center;
+            color: #e67e22;
+            margin-top: 12px;
+            font-size: 16px;
+        }
+        
     </style>
 </head>
 <body>
@@ -180,8 +188,14 @@
     <div class="success-container">
         <p class="success-main">✅ Bestellung erfolgreich gesendet.</p>
         <p class="success-sub">Vielen Dank für deine Bestellung!</p>
+
+        <p class="spam-hint">
+            Falls du keine E-Mail findest, schau bitte im Spam-Ordner nach
+            und markiere die Nachricht als „Kein Spam“. 😊
+        </p>
     </div>
 {% else %}
+
     <!-- Normale Bestellseite -->
     <h1>🍝 Nudelbestellung</h1>
     <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
