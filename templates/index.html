@@ -10,10 +10,12 @@
             background: #fafafa;
             color: #333;
         }
+
         h1 {
             color: #d35400;
             text-align: center;
         }
+
         h3 {
             text-align: center;
             color: #777;
@@ -21,12 +23,23 @@
             font-weight: bold;
         }
 
-        /* Erfolgsmeldung */
-        .message {
+        /* Erfolgssicht */
+        .success-container {
+            margin-top: 60px;
             text-align: center;
-            color: green;
+        }
+
+        .success-main {
+            color: #008000;
+            font-size: 20px;
             font-weight: bold;
-            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .success-sub {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
         }
 
         /* Haupt-Tabelle schmal & kompakt */
@@ -35,6 +48,7 @@
             justify-content: center;
             margin-top: 20px;
         }
+
         table {
             width: 55%;
             max-width: 750px;
@@ -42,15 +56,18 @@
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+
         th, td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
         }
+
         th {
             background: #f39c12;
             color: white;
         }
+
         img {
             width: 160px;
             height: auto;
@@ -59,10 +76,11 @@
 
         /* Hintergrund je nach Nudelsorte */
         .dinkel-row {
-            background-color: rgba(0, 128, 0, 0.08);
+            background-color: rgba(0, 128, 0, 0.08); /* leichtes Grün */
         }
+
         .normal-row {
-            background-color: rgba(255, 0, 0, 0.05);
+            background-color: rgba(255, 0, 0, 0.05); /* leichtes Rot */
         }
 
         /* Kompakte Zusammenfassung */
@@ -71,6 +89,7 @@
             justify-content: center;
             margin-top: 20px;
         }
+
         .summary-table {
             border-collapse: collapse;
             width: 55%;
@@ -78,14 +97,17 @@
             background: #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+
         .summary-table td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
         }
+
         .summary-table .label {
             font-weight: bold;
         }
+
         .summary-table .value {
             font-weight: normal;
         }
@@ -98,6 +120,7 @@
             align-items: center;
             gap: 10px;
         }
+
         .form-row {
             display: flex;
             align-items: center;
@@ -105,12 +128,15 @@
             gap: 10px;
             width: 450px;
         }
+
         .form-row label {
             width: 80px;
             text-align: right;
             font-weight: bold;
         }
-        input[type="text"], input[type="email"] {
+
+        input[type="text"],
+        input[type="email"] {
             padding: 10px;
             width: 300px;
             border: 1px solid #ccc;
@@ -141,20 +167,25 @@
             display: block;
             margin: 25px auto;
         }
+
         button:hover {
             background: #d35400;
         }
     </style>
 </head>
 <body>
+
+{% if message %}
+    <!-- Erfolgsseite NACH Bestellung -->
+    <div class="success-container">
+        <p class="success-main">✅ {{ message }}</p>
+        <p class="success-sub">Vielen Dank für deine Bestellung!</p>
+    </div>
+{% else %}
+    <!-- Normale Bestellseite -->
     <h1>🍝 Nudelbestellung</h1>
     <h3>Nudeln wie zu Omas Zeiten – Ohne Geschmacksverstärker und Aromen</h3>
 
-    {% if message %}
-        <p class="message">{{ message }}</p>
-    {% endif %}
-
-    {% if not message %}
     <form id="orderForm" method="POST" action="/submit">
         <!-- Name & Email -->
         <div class="form-section">
@@ -182,10 +213,21 @@
                 <tr class="{% if noodle.startswith('Dinkel') %}dinkel-row{% else %}normal-row{% endif %}">
                     <td>{{ display_name }}</td>
                     <td>
-                        <img src="{{ url_for('static', filename='images/' + noodle.replace('30%','30').replace(' ', '_').replace(',', '_').replace('.', '') + '.JPG') }}" alt="{{ noodle }}">
+                        <img src="{{ url_for('static',
+                            filename='images/' + noodle.replace('30%','30')
+                                                    .replace(' ', '_')
+                                                    .replace(',', '_')
+                                                    .replace('.', '') + '.JPG') }}"
+                             alt="{{ noodle }}">
                     </td>
                     <td>2,50</td>
-                    <td><input type="number" name="qty_{{ loop.index }}" value="0" min="0" onchange="updateSummary()"></td>
+                    <td>
+                        <input type="number"
+                               name="qty_{{ loop.index }}"
+                               value="0"
+                               min="0"
+                               onchange="updateSummary()">
+                    </td>
                 </tr>
                 {% endfor %}
             </table>
@@ -195,9 +237,18 @@
         <div class="summary-container">
             <table class="summary-table">
                 <tr>
-                    <td><span class="label">Gesamtanzahl:</span> <span class="value" id="totalQty">0</span> Packungen</td>
-                    <td><span class="label">Gratis-Packungen:</span> <span class="value" id="freePacks">0</span></td>
-                    <td><span class="label">Zu zahlen:</span> <span class="value" id="totalPrice">0.00</span> €</td>
+                    <td>
+                        <span class="label">Gesamtanzahl:</span>
+                        <span class="value" id="totalQty">0</span> Packungen
+                    </td>
+                    <td>
+                        <span class="label">Gratis-Packungen:</span>
+                        <span class="value" id="freePacks">0</span>
+                    </td>
+                    <td>
+                        <span class="label">Zu zahlen:</span>
+                        <span class="value" id="totalPrice">0.00</span> €
+                    </td>
                 </tr>
             </table>
         </div>
@@ -215,21 +266,25 @@
 
         <button type="submit">✅ Bestellung abschicken</button>
     </form>
-    {% endif %}
 
     <script>
         const pricePerPack = 2.50;
+
         function updateSummary() {
             let totalQty = 0;
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 totalQty += parseInt(input.value || 0);
             });
+
             let freePacks = Math.floor(totalQty / 10);
             let totalPrice = totalQty * pricePerPack - freePacks * pricePerPack;
+
             document.getElementById('totalQty').textContent = totalQty;
             document.getElementById('freePacks').textContent = freePacks;
             document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
         }
     </script>
+{% endif %}
+
 </body>
 </html>
